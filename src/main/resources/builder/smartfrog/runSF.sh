@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -x $1 "export JAVA_HOME=$JAVA_HOME; export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin$PATH; export SFHOME=$2; export SFUSERHOME=$3; export SFUSERHOME1=$4; cd $5; export JVMARGS='$6'; export SFDEFAULTINI=-Dorg.smartfrog.iniFile=$7; $2/bin/sfDaemon"

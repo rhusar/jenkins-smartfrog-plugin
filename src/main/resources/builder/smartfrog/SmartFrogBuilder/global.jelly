@@ -1,0 +1,30 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="SmartFrog">
+    <f:entry title="SmartFrog installation"
+      description="List of available SmartFrog installations">
+      
+      <f:repeatable var="instance" items="${descriptor.smartfrogInstances}">
+        <table width="100%">
+      
+          <f:entry title="name">
+            <input class="setting-input" name="sfname"
+              type="text" value="${instance.name}"/>
+          </f:entry>
+
+          <f:entry title="path">
+            <input class="setting-input" name="sfpath"
+              type="text" value="${instance.path}"/>
+          </f:entry>
+                    
+          <f:entry title="">
+            <div align="right">
+              <f:repeatableDeleteButton />
+            </div>
+          </f:entry>
+          
+        </table>
+      </f:repeatable>
+      
+    </f:entry>
+  </f:section>
+</j:jelly>
