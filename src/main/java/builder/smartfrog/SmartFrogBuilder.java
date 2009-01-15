@@ -60,6 +60,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    public static final String ENV_SF_HOME = "SFHOME";
    public static final String ENV_SF_USER_HOME = "SFUSERHOME";
    public static final long HEARTBEAT_PERIOD = 10000;
+
    private String smartFrogName;
    private String hosts;
    private String deployHost;
@@ -76,6 +77,10 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    private transient BuildListener listener;
    private transient boolean componentTerminated = false;
    private transient boolean terminatedNormally;
+   
+    private String sfUserHome4;
+    private String sfUserHome3;
+    private String sfUserHome2;
 
    /**
     * We'll use this from the <tt>config.jelly</tt>.
@@ -311,6 +316,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
          int count = (names == null) ? 0 : names.length;
 
          smartfrogInstances = new SmartFrogInstance[count];
+
          for (int k = 0; k < count; k++) {
             smartfrogInstances[k] = new SmartFrogInstance(names[k], paths[k]);
          }
@@ -340,7 +346,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    protected String[] buildDaemonCommandLine(String host) {
       String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
       return new String[]{Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("runSF.sh").getFile(),
-         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), getWorkspacePath(), getJvmArgs(), iniPath};
+         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4, getWorkspacePath(), getJvmArgs(), iniPath};
    }
 
    protected String[] buildStopDaemonCommandLine(String host) {
@@ -364,7 +370,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
       return new String[] {Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("deploySF.sh").getFile(),
-         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), 
+         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4,
          deployPath, componentName, getWorkspacePath()};
    }
 
@@ -409,6 +415,35 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    public void setSfUserHome(String sfUserHome) {
       this.sfUserHome = sfUserHome;
+   }
+
+   /**
+    * added by rhusar - report problems to rhusar@redhat.com
+    * 
+    * added SFUSERHOMEs 2,3,4 - #1 is used for Support Libs (terminate hooks)
+    */
+   public String getSfUserHome2() {
+      return sfUserHome2;
+   }
+
+   public void setSfUserHome2(String sfUserHome2) {
+      this.sfUserHome2 = sfUserHome2;
+   }
+
+      public String getSfUserHome3() {
+      return sfUserHome3;
+   }
+
+   public void setSfUserHome3(String sfUserHome3) {
+      this.sfUserHome3 = sfUserHome3;
+   }
+
+      public String getSfUserHome4() {
+      return sfUserHome4;
+   }
+
+   public void setSfUserHome4(String sfUserHome4) {
+      this.sfUserHome4 = sfUserHome4;
    }
 
    public String getScriptName() {
@@ -478,8 +513,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
       }
    }
 
-   private void interrupted() {
-   }
+  /* private void interrupted() {
+   } */
 
    public String getJvmArgs() {
       return jvmArgs;
