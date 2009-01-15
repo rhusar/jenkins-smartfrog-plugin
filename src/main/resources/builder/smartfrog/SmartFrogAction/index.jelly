@@ -10,7 +10,7 @@
         SmartFrog daemon output - ${it.host}
       </h1>
       <l:rightspace>
-        <a href="consoleText">
+        <a href="logAsPlainText">
           <img src="${imagesURL}/24x24/document.gif" alt="" />View as plain text
         </a>
       </l:rightspace>
