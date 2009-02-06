@@ -107,6 +107,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    @Override
    public boolean perform(final Build<?, ?> build, final Launcher launcher, final BuildListener listener) throws InterruptedException {
+
+      componentTerminated = false;
+
       this.listener = listener;
       String[] hostList = hosts.split("[ \t]+");
 
