@@ -22,6 +22,18 @@
       <input class="setting-input" name="sb.sfUserHome" type="text" value="${instance.sfUserHome}"/>
     </f:entry>
 
+    <f:entry title="SFUSERHOME2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome2" type="text" value="${instance.sfUserHome2}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome3" type="text" value="${instance.sfUserHome3}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome4" type="text" value="${instance.sfUserHome4}"/>
+    </f:entry>
+
     <f:entry title="JVM_ARGS" description="Java command line arguments.">
       <input class="setting-input" name="sb.jvmArgs" type="text" value="${instance.jvmArgs}"/>
     </f:entry>
