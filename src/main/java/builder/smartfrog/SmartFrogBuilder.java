@@ -348,12 +348,12 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    protected String[] buildDaemonCommandLine(String host) {
       String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
-      return new String[]{Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("runSF.sh").getFile(),
+      return new String[]{"/bin/bash", "-xe", getClass().getResource("runSF.sh").getFile(),
          host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4, getWorkspacePath(), getJvmArgs(), iniPath};
    }
 
    protected String[] buildStopDaemonCommandLine(String host) {
-      return new String[]{Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("stopSF.sh").getFile(),
+      return new String[]{"/bin/bash", "-xe", getClass().getResource("stopSF.sh").getFile(),
          host, getSfInstance().getPath(), sfUserHome};
    }
 
@@ -372,13 +372,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    }
 
    protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
-      return new String[] {Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("deploySF.sh").getFile(),
+      return new String[] {"/bin/bash", "-xe", getClass().getResource("deploySF.sh").getFile(),
          host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4,
          deployPath, componentName, getWorkspacePath()};
    }
 
    protected String[] buildDiagCommandLine(String host) {
-      return new String[]{Shell.DESCRIPTOR.getShell(), "-xe", getClass().getResource("diagnoseSF.sh").getFile(),
+      return new String[]{"/bin/bash", "-xe", getClass().getResource("diagnoseSF.sh").getFile(),
          host, getSfInstance().getPath(), sfUserHome, scriptName};
    }
 
