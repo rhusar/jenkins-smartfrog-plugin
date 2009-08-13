@@ -1,4 +1,3 @@
-
 <!--
   Displays the console output
 -->
@@ -10,7 +9,7 @@
         SmartFrog daemon output - ${it.host}
       </h1>
       <l:rightspace>
-        <a href="logAsPlainText">
+        <a href="consoleText">
           <img src="${imagesURL}/24x24/document.gif" alt="" />View as plain text
         </a>
       </l:rightspace>
