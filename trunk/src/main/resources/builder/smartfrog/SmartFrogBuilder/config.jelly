@@ -1,0 +1,76 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+<f:section title="SmartFrog environment">  
+
+    <f:entry title="SmartFrog instance">
+        <select class="setting-input" name="sb.smartFrogName">
+            <j:forEach var="sfInstance" items="${descriptor.smartfrogInstances}">
+                <f:option value="${sfInstance.getName()}" selected="${sfInstance.getName()==instance.getSmartFrogName()}">${sfInstance.getName()}</f:option>
+            </j:forEach>
+        </select>
+    </f:entry>
+
+    <f:entry title="Deploy host" description="Name of the machine for initial deployment.">
+      <input class="setting-input" name="sb.deployHost" type="text" value="${instance.deployHost}"/>
+    </f:entry>
+
+    <f:entry title="Target hosts" description="Whitespace-separated list of target host machines.">
+      <input class="setting-input" name="sb.hosts" type="text" value="${instance.hosts}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME" description="List of whitespace-separated path pointing to directories to SmartFrog components.">
+      <input class="setting-input" name="sb.sfUserHome" type="text" value="${instance.sfUserHome}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome2" type="text" value="${instance.sfUserHome2}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome3" type="text" value="${instance.sfUserHome3}"/>
+    </f:entry>
+
+    <f:entry title="SFUSERHOME4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+      <input class="setting-input" name="sb.sfUserHome4" type="text" value="${instance.sfUserHome4}"/>
+    </f:entry>
+
+    <f:entry title="JVM_ARGS" description="Java command line arguments.">
+      <input class="setting-input" name="sb.jvmArgs" type="text" value="${instance.jvmArgs}"/>
+    </f:entry>
+
+   <f:block>
+     <table>
+       <f:optionalBlock name="sb.useAltIni" title="Use an alternate non-default SmartFrog configuration" checked="${instance.useAltIni}">
+         <f:entry title="Path to alternate SmartFrog configuration">
+           <f:textbox name="sb.sfIni" value="${instance.sfIni}"/>
+         </f:entry>
+       </f:optionalBlock>
+     </table>
+   </f:block>
+
+</f:section>
+
+<f:section title="Deployment configuration">  
+    <f:entry title="Deployment name" description="The name of the component to be deployed. The name of the component has to be unique in the running SF environment.">
+      <input class="setting-input" name="sb.scriptName" type="text" value="${instance.scriptName}"/>
+    </f:entry>
+
+      <f:radioBlock name="sb.scriptSource" value="path" title="Get description from file" checked="${instance.scriptSource=='path'}">
+        <f:entry title="Path" description="Path pointing to the script to be deployed.">
+          <input class="setting-input" name="sb.scriptPath" type="text" value="${instance.scriptPath}"/>
+        </f:entry>
+      </f:radioBlock>
+
+      <f:radioBlock name="sb.scriptSource" value="content" title="Specify component description" checked="${instance.scriptSource=='content'}">
+        <f:entry title="Script content" description="Deployment description">
+           <textarea name="sb.scriptContent" id="sb.scriptContent" 
+                     class="setting-input" rows="30">
+             <st:out value="${instance.scriptContent}"/>
+           </textarea>
+           <div class="textarea-handle"/>
+        </f:entry>
+      </f:radioBlock>
+
+</f:section>
+
+</j:jelly>
