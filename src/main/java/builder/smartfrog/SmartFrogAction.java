@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.util.Map;
 import java.util.Vector;
 import javax.servlet.RequestDispatcher;
@@ -162,33 +163,11 @@ public class SmartFrogAction implements Action, Runnable {
        return log;
    }
 
-   public void doLogAsPlainText(StaplerRequest req, StaplerResponse res) throws IOException, ServletException {
-       StringBuffer contents = new StringBuffer();
- BufferedReader input = null;
-      try {
-         input =  new BufferedReader(new FileReader(this.getLogFile()));
-        String line = null;
-
-        while (( line = input.readLine()) != null){
-          contents.append(line);
-          contents.append(System.getProperty("line.separator"));
-        }
-
-      }
-      catch (Exception e) {
-          //return e.toString();
-      }
-      finally {
-        //input.close();
-      }
-
-  req.setAttribute("output", contents);
- RequestDispatcher rd = req.getView(this, "consoleText.jelly");
- rd.forward(req, res);
-  
-//return contents.toString();
+   public Reader getLogReader() throws IOException {
+      File logFile = getLogFile();
+      return new FileReader(logFile);
    }
-
+   
    public void run() {
 
       // wait for proccess to finish

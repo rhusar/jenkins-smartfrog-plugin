@@ -25,6 +25,7 @@ import org.kohsuke.stapler.StaplerRequest;
  * @author Kohsuke Kawaguchi
  */
 import hudson.Launcher;
+import hudson.matrix.MatrixConfiguration;
 import hudson.model.Build;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
@@ -36,6 +37,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
@@ -73,14 +75,15 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    private boolean useAltIni;
    private String sfIni;
 
-   private Project project;  
+   private Project project;
    private transient BuildListener listener;
    private transient boolean componentTerminated = false;
    private transient boolean terminatedNormally;
    
-    private String sfUserHome4;
-    private String sfUserHome3;
-    private String sfUserHome2;
+   private String sfUserHome4;
+   private String sfUserHome3;
+   private String sfUserHome2;
+   private String exportMatrixAxes = "";
 
    /**
     * We'll use this from the <tt>config.jelly</tt>.
@@ -132,9 +135,35 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
          return false;
       }
 
+      /**
+       * Export Matrix parameters if matrix project block
+       *
+       * If problems occur, then blame:
+       * @author rhusar@redhat.com
+       * @version 2009-07-08
+       */
+      if (project instanceof MatrixConfiguration) {
+         MatrixConfiguration matrixConfProject = (MatrixConfiguration) project;
+
+         // Get the matrix configuration.
+         Map<String, String> matrixConfMap = null;
+         matrixConfMap = matrixConfProject.getCombination();
+
+         exportMatrixAxes = " ";
+
+         // Iterate and only "SF_" prefixed variables.
+         for (Map.Entry<String, String> entry : matrixConfMap.entrySet()) {
+            if (entry.getKey().startsWith("SF_")) {
+               exportMatrixAxes = exportMatrixAxes + "export " + entry.getKey() + "=" + entry.getValue() + "; ";
+            }
+         }
+
+         // Do a little logging.
+         System.out.println("SFPlugin: from matrix: " + matrixConfMap + "; exporting: " + exportMatrixAxes);
+      }
+
       SmartFrogAction[] sfActions = new SmartFrogAction[hostList.length];
-
-
+      
       // start daemons
       for (int k = 0; k < hostList.length; k++) {
          String host = hostList[k];
@@ -349,7 +378,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    protected String[] buildDaemonCommandLine(String host) {
       String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
       return new String[]{"/bin/bash", "-xe", getClass().getResource("runSF.sh").getFile(),
-         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4, getWorkspacePath(), getJvmArgs(), iniPath};
+         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, 
+         sfUserHome3, sfUserHome4, getWorkspacePath(), getJvmArgs(), iniPath, exportMatrixAxes};
    }
 
    protected String[] buildStopDaemonCommandLine(String host) {
@@ -373,8 +403,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
       return new String[] {"/bin/bash", "-xe", getClass().getResource("deploySF.sh").getFile(),
-         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,sfUserHome4,
-         deployPath, componentName, getWorkspacePath()};
+         host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3, 
+         sfUserHome4, deployPath, componentName, getWorkspacePath(), exportMatrixAxes};
    }
 
    protected String[] buildDiagCommandLine(String host) {
