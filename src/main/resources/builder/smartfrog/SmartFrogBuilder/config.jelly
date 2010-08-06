@@ -18,7 +18,7 @@
       <input class="setting-input" name="sb.hosts" type="text" value="${instance.hosts}"/>
     </f:entry>
 
-    <f:entry title="SFUSERHOME" description="List of whitespace-separated path pointing to directories to SmartFrog components.">
+    <f:entry title="SFUSERHOME" description="List of colon-separated paths pointing to directories to SmartFrog components.">
       <input class="setting-input" name="sb.sfUserHome" type="text" value="${instance.sfUserHome}"/>
     </f:entry>
 
