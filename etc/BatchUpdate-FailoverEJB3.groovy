@@ -67,7 +67,9 @@ for (job in jobs){
    sfBuilder.@sfUserHome2 = "/qa/services/hudson/static_build_env/eap-test-artifacts/client/latest"
    sfBuilder.jvmArgs  = "-server -Xmx4g -XX:+UseLargePages"
    sfBuilder.@scriptContent = sfBuilder.scriptContent.replaceAll("org/jboss/smartfrog/test/ejb3/template-failover-ejb3-order.sf", "org/jboss/smartfrog/ejb3/template-ejb3-order.sf")
+   sfBuilder.@scriptContent = sfBuilder.scriptContent.replaceAll("org/jboss/smartfrog/ejb3/template-ejb3-order.sf", "org/jboss/smartfrog/ejb3/template-failover-ejb3-order.sf")
    sfBuilder.@scriptContent = sfBuilder.scriptContent.replaceAll("org/jboss/smartfrog/test/ejb3/template-failover-ejb3-random.sf", "org/jboss/smartfrog/ejb3/template-ejb3-random.sf")
+   sfBuilder.@scriptContent = sfBuilder.scriptContent.replaceAll("org/jboss/smartfrog/ejb3/template-ejb3-random.sf", "org/jboss/smartfrog/ejb3/template-failover-ejb3-random.sf");
    sfBuilder.hosts = "perf09 perf01 perf02 perf03 perf04 perf05"
 
    // update maven plugin
