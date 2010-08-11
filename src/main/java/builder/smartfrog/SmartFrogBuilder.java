@@ -2,29 +2,6 @@ package builder.smartfrog;
 
 import builder.smartfrog.SmartFrogAction.State;
 import hudson.Launcher;
-import hudson.model.Build;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
-import hudson.tasks.Builder;
-import org.kohsuke.stapler.StaplerRequest;
-/**
- * Sample {@link Builder}.
- *
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link HelloWorldBuilder} is created. The created
- * instance is persisted to the project configuration XML by using
- * XStream, so this allows you to use instance fields (like {@link #name})
- * to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform(Build, Launcher, BuildListener)} method
- * will be invoked.
- *
- * @author Kohsuke Kawaguchi
- */
-import hudson.Launcher;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.Build;
 import hudson.model.BuildListener;
@@ -32,7 +9,6 @@ import hudson.model.Descriptor;
 import hudson.model.Project;
 import hudson.model.Result;
 import hudson.tasks.Builder;
-import hudson.tasks.Shell;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -130,7 +106,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
 
       } catch (IOException ioe) {
-         listener.getLogger().println("Could not get cannonical path to workspace.");
+         listener.getLogger().println("Could not get canonical path to workspace:" + ioe);
+         ioe.printStackTrace();
          build.setResult(Result.FAILURE);
          return false;
       }
@@ -577,7 +554,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
       try {
          return new File(project.getWorkspace().toURI()).getCanonicalPath();
       } catch (IOException ioe) {         
+         ioe.printStackTrace();
       } catch (InterruptedException ie) {         
+         ie.printStackTrace();
       }
       return null;
    }
