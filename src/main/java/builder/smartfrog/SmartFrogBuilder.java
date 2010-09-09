@@ -47,7 +47,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    private String scriptPath;
    private String scriptSource;
    private String scriptContent;
-   private String jvmArgs;
+   private String sfOpts;
    private boolean useAltIni;
    private String sfIni;
 
@@ -356,7 +356,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
       String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
       return new String[]{"/bin/bash", "-xe", getClass().getResource("runSF.sh").getFile(),
          host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, 
-         sfUserHome3, sfUserHome4, getWorkspacePath(), getJvmArgs(), iniPath, exportMatrixAxes};
+         sfUserHome3, sfUserHome4, getWorkspacePath(), getSfOpts(), iniPath, exportMatrixAxes};
    }
 
    protected String[] buildStopDaemonCommandLine(String host) {
@@ -526,12 +526,12 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
   /* private void interrupted() {
    } */
 
-   public String getJvmArgs() {
-      return jvmArgs;
+   public String getSfOpts() {
+      return sfOpts;
    }
 
-   public void setJvmArgs(String jvmArgs) {
-      this.jvmArgs = jvmArgs;
+   public void setSfOpts(String sfOpts) {
+      this.sfOpts = sfOpts;
    }
    
    public boolean isUseAltIni() {

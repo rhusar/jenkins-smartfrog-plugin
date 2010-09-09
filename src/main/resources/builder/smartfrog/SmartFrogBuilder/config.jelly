@@ -34,8 +34,9 @@
       <input class="setting-input" name="sb.sfUserHome4" type="text" value="${instance.sfUserHome4}"/>
     </f:entry>
 
-    <f:entry title="JVM_ARGS" description="Java command line arguments.">
-      <input class="setting-input" name="sb.jvmArgs" type="text" value="${instance.jvmArgs}"/>
+    <!-- Since 3.17.014, see http://jira.smartfrog.org/jira/browse/SFOS-1234 for more information. -->
+    <f:entry title="SF_OPTS" description="Arguments passed to JVM (since 3.17.014 and higher).">
+      <input class="setting-input" name="sb.sfOpts" type="text" value="${instance.sfOpts}"/>
     </f:entry>
 
    <f:block>
