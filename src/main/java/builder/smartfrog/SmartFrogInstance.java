@@ -3,13 +3,13 @@
  *
  * Created on 22.10.2007, 11:28:46
  *
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
  */
 
 package builder.smartfrog;
 
 /**
+ * Represents an installation object - name of the SmartFrog environment installation
+ * and the path where it's located.
  *
  * @author dominik
  */

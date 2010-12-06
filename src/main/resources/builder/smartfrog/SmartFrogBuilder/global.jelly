@@ -6,12 +6,12 @@
       <f:repeatable var="instance" items="${descriptor.smartfrogInstances}">
         <table width="100%">
       
-          <f:entry title="name">
+          <f:entry title="Name" description="name by which others can recognize this installation">
             <input class="setting-input" name="sfname"
               type="text" value="${instance.name}"/>
           </f:entry>
 
-          <f:entry title="path">
+          <f:entry title="Path" description="no trailing slash (eg.: /opt/smartfrog)">
             <input class="setting-input" name="sfpath"
               type="text" value="${instance.path}"/>
           </f:entry>
