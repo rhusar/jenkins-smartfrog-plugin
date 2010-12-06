@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 import org.kohsuke.stapler.StaplerRequest;
+import hudson.FilePath;
 
 /**
  * Sample {@link Builder}.
@@ -61,6 +62,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    private String sfUserHome2;
    private String exportMatrixAxes = "";
 
+   private String defaultScriptPath;
+
    /**
     * We'll use this from the <tt>config.jelly</tt>.
     */
@@ -98,10 +101,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
          // write deploy script, if needed
          if (scriptSource.equals("content")) {
+	     /*
             File f = getDefaultScriptFile();
             BufferedWriter w = new BufferedWriter(new FileWriter(f));
             w.write(scriptContent);
             w.close();
+	     */
+	    createDefaultScriptFile(scriptContent);
          }
 
 
@@ -399,8 +405,14 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    }
 
 
+   private void createDefaultScriptFile(String command) throws InterruptedException, IOException {
+       FilePath path = project.getWorkspace().createTextTempFile("deployScript", ".sf", command, true);
+       defaultScriptPath = path.getRemote();
+   }
+
    private File getDefaultScriptFile() {
-      return new File(getWorkspacePath(), "deployScript.sf");
+       //return new File(getWorkspacePath(), "deployScript.sf");
+       return new File(defaultScriptPath);
    }
 
    public String getHosts() {
