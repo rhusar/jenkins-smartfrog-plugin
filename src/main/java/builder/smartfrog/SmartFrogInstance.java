@@ -4,7 +4,6 @@
  * Created on 22.10.2007, 11:28:46
  *
  */
-
 package builder.smartfrog;
 
 /**
@@ -17,13 +16,15 @@ public class SmartFrogInstance {
 
    private String name;
    private String path;
+   private String scripts;
 
-   public SmartFrogInstance() {       
+   public SmartFrogInstance() {
    }
-   
-   public SmartFrogInstance(String name, String path) {
+
+   public SmartFrogInstance(String name, String path, String scripts) {
       this.name = name;
       this.path = path;
+      this.scripts = scripts;
    }
 
    public String getName() {
@@ -40,5 +41,13 @@ public class SmartFrogInstance {
 
    public void setPath(String path) {
       this.path = path;
+   }
+
+   public String getScripts() {
+      return scripts;
+   }
+
+   public void setScripts(String scripts) {
+      this.scripts = scripts;
    }
 }

@@ -9,9 +9,7 @@ import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.Action;
 import hudson.model.Build;
-import hudson.model.JDK;
 import hudson.model.LargeText;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -22,8 +20,6 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.util.Map;
 import java.util.Vector;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
