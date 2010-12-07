@@ -1,9 +1,7 @@
-<!--
-  This view is used to render the plugin list page.
-  Since we don't really have anything dynamic here, let's just use static HTML. 
--->
 
 <div>
-  SmartFrog support plugin for Hudson developed by <a href="mailto:dpospisi@redhat.com">Dominik Pospisil</a>
-  currently maintained by <a href="mailto:rhusar@redhat.com">Radoslav Husar</a>.
+  SmartFrog support plugin for Hudson developed by
+   <a href="mailto:dpospisi@redhat.com">Dominik Pospisil</a>
+  currently maintained by
+   <a href="mailto:rhusar@redhat.com">Radoslav Husar</a>.
 </div>

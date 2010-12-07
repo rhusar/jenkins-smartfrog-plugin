@@ -15,10 +15,10 @@
               type="text" value="${instance.path}"/>
           </f:entry>
 
-          <f:entry title="Scripts" description="location mounted on all nodes which contains deploySF.sh, runSF.sh and stopSF.sh">
+          <f:entry title="Support Files" description="location mounted on all nodes which contains support files (hudson-support.sf, hudson-support.jar, deploySF.sh, runSF.sh, stopSF.sh)">
           <!-- no mention of diagnoseSF.sh since its not used at the time being -->
-            <input class="setting-input" name="sfscripts"
-              type="text" value="${instance.scripts}"/>
+            <input class="setting-input" name="sfsupport"
+              type="text" value="${instance.support}"/>
           </f:entry>
                     
           <f:entry title="">

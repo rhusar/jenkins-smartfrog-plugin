@@ -325,14 +325,14 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
          // set that to properties and call save().
          String[] names = req.getParameterValues("sfname");
          String[] paths = req.getParameterValues("sfpath");
-         String[] scripts = req.getParameterValues("sfscripts");
+         String[] support = req.getParameterValues("sfsupport");
 
          int count = (names == null) ? 0 : names.length;
 
          smartfrogInstances = new SmartFrogInstance[count];
 
          for (int k = 0; k < count; k++) {
-            smartfrogInstances[k] = new SmartFrogInstance(names[k], paths[k], scripts[k]);
+            smartfrogInstances[k] = new SmartFrogInstance(names[k], paths[k], support[k]);
          }
 
          save();
@@ -360,14 +360,14 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    protected String[] buildDaemonCommandLine(String host) {
       String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
       return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getScripts() + "/runSF.sh",
+                 getSfInstance().getSupport() + "/runSF.sh",
                  host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2,
                  sfUserHome3, sfUserHome4, getWorkspacePath(), getSfOpts(), iniPath, exportMatrixAxes};
    }
 
    protected String[] buildStopDaemonCommandLine(String host) {
       return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getScripts() + "/stopSF.sh",
+                 getSfInstance().getSupport() + "/stopSF.sh",
                  host, getSfInstance().getPath(), sfUserHome};
    }
 
@@ -387,7 +387,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
    protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
       return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getScripts() + "/deploySF.sh",
+                 getSfInstance().getSupport() + "/deploySF.sh",
                  host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,
                  sfUserHome4, deployPath, componentName, getWorkspacePath(), exportMatrixAxes};
    }
@@ -576,11 +576,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    }
    
    private String getSupportLibPath() {
-      return getClass().getResource("sf-lib").getFile();
+      //return getClass().getResource("sf-lib").getFile();
+      return getSfInstance().getSupport();
    }
    
    private String getSupportDescPath() {
-      return getClass().getResource("hudson-support.sf").getFile();
+      //return getClass().getResource("hudson-support.sf").getFile();
+      return getSfInstance().getSupport() + "/hudson-support.sf";
    }
    
    public synchronized void componentTerminated(boolean normal) {
