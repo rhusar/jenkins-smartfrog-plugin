@@ -1,0 +1,1 @@
+Few example scripts how to reconfigure hudson jobs in batch (eg. update to SCM setttings).
