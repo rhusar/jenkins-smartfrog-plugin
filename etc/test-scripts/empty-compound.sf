@@ -1,8 +1,9 @@
-#include "/org/smartfrog/components.sf"
+#include "org/smartfrog/components.sf"
 
-sfConfig extends Compound {
+sfConfig extends Sequence {
 
-   Empty extends Compound {
+   Empty extends Seqeunce {
+      doNothing "done!";
    }
 
 }
