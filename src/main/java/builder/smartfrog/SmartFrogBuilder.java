@@ -1,25 +1,42 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2012, Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package builder.smartfrog;
 
-import hudson.Extension;
 import builder.smartfrog.SmartFrogAction.State;
+import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixConfiguration;
-import hudson.model.Build;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
-import hudson.model.Project;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.tasks.Builder;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import org.kohsuke.stapler.StaplerRequest;
-import hudson.FilePath;
 
 /**
  * SmartFrog Hudson/Jenkins plugin main.
  *
- * @author <a href="mailto:rhusar@redhat.com">Radoslav Husar</a>
+ * @author <a href="http://www.radoslavhusar.com/">Radoslav Husar</a>
  * @version Mar 2011
  */
 public class SmartFrogBuilder extends Builder implements SmartFrogActionListener {
@@ -51,24 +68,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
    /**
     * We'll use this from the <tt>config.jelly</tt>.
     */
-   //public String getName() {
-   //  return name;
-   //}
-/*
-   public boolean perform(Build build, Launcher launcher, BuildListener listener) {
-   // this is where you 'build' the project
-   // since this is a dummy, we just say 'hello world' and call that a build
-   // this also shows how you can consult the global configuration of the builder
-   if(DESCRIPTOR.useFrench())
-   listener.getLogger().println("Bonjour, "+name+"!");
-   else
-   listener.getLogger().println("Hello, "+name+"!");
-   return true;
-   }
-    */
    @Override
    public Descriptor<Builder> getDescriptor() {
-      // see Descriptor javadoc for more about what a descriptor is.
       return DESCRIPTOR;
    }
 
@@ -107,7 +108,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
        * Export Matrix parameters if matrix project block
        *
        * If problems occur, then blame:
-       * @author rhusar@redhat.com
+       * @author Radoslav Husar
        * @version 2009-07-08
        */
       if (project instanceof MatrixConfiguration) {
@@ -282,14 +283,6 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
       this.smartFrogName = smartFrogName;
    }
 
-   /**
-    * Descriptor for {@link HelloWorldBuilder}. Used as a singleton.
-    * The class is marked as public so that it can be accessed from views.
-    *
-    * <p>
-    * See <tt>views/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
-    * for the actual HTML fragment for the configuration screen.
-    */
    @Extension
    public static final class DescriptorImpl extends Descriptor<Builder> {
 

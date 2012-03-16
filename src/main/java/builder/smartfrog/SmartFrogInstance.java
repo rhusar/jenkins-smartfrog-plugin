@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2012, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -25,8 +25,8 @@ package builder.smartfrog;
  * Represents an installation object - name of the SmartFrog environment installation
  * and the path where it's located.
  *
- * @author dominik
- * @author <a href="mailto:rhusar@redhat.com">Radoslav Husar</a>
+ * @author Dominik Pospisil
+ * @author <a href="http://www.radoslavhusar.com/">Radoslav Husar</a>
  */
 public class SmartFrogInstance {
 
