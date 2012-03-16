@@ -2,35 +2,31 @@
 
 <f:section title="SmartFrog environment">  
 
-    <f:entry title="SmartFrog instance" field="smartFrogName">
-        <select class="setting-input">
-            <j:forEach var="sfInstance" items="${descriptor.smartfrogInstances}">
-                <f:option value="${sfInstance.getName()}" selected="${sfInstance.getName()==it.getSmartFrogName()}">${sfInstance.getName()}</f:option>
-            </j:forEach>
-        </select>
-    </f:entry>
+	<f:entry title="SmartFrog instance">
+		<f:select field="smartFrogName" />
+	</f:entry>
 
     <f:entry title="Deploy host" field="deployHost" description="Name of the machine for initial deployment.">
     	<f:textbox />
     </f:entry>
 
-    <f:entry title="Target hosts" fiel="hosts" description="Whitespace-separated list of target host machines.">
+    <f:entry title="Target hosts" field="hosts" description="Whitespace-separated list of target host machines.">
     	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME" filed="sfUserHome" description="List of colon-separated paths pointing to directories to SmartFrog components.">
+    <f:entry title="SFUSERHOME" field="sfUserHome" description="List of colon-separated paths pointing to directories to SmartFrog components.">
    		<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME2" filed="sfUserHome2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    <f:entry title="SFUSERHOME2" field="sfUserHome2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
     	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME3" filed="sfUserHome3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    <f:entry title="SFUSERHOME3" field="sfUserHome3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
     	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME4" filed="sfUserHome4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    <f:entry title="SFUSERHOME4" field="sfUserHome4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
     	<f:textbox />
     </f:entry>
 
@@ -41,7 +37,7 @@
 
    <f:block>
      <table>
-       <f:optionalBlock field="useAltIni" title="Use an alternate non-default SmartFrog configuration">
+       <f:optionalBlock field="useAltIni" inline="true" title="Use an alternate non-default SmartFrog configuration">
          <f:entry title="Path to alternate SmartFrog configuration" field="sfIni">
            <f:textbox />
          </f:entry>

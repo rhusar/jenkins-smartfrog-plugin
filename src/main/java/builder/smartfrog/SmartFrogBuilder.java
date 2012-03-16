@@ -21,22 +21,17 @@
  */
 package builder.smartfrog;
 
-import builder.smartfrog.SmartFrogAction.State;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixConfiguration;
-
-import hudson.model.AbstractBuild;
-import hudson.model.Build;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
-import hudson.model.JDK;
 import hudson.model.Project;
-
 import hudson.tasks.Builder;
+import hudson.util.ListBoxModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -352,15 +347,15 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             save();
             return super.configure(req, json);
         }
-/*
-        @Override                                                                                                               
-        public SmartFrogBuilder newInstance(StaplerRequest req) throws hudson.model.Descriptor.FormException {                                                                                                                                    
-           SmartFrogBuilder sb = new SmartFrogBuilder();                                                                        
-           req.bindParameters(sb, "sb.");                                                                                       
-                                                                                                                                
-           return sb;                                                                                                           
-        }     
-*/        
+        
+        public ListBoxModel doFillSmartFrogNameItems() {
+            ListBoxModel lb = new ListBoxModel();
+            for(SmartFrogInstance sf : smartfrogInstances){
+                lb.add(sf.getName(), sf.getName());
+            }
+            return lb;
+        }
+        
     }
 
     protected String[] buildDaemonCommandLine(String host) {
