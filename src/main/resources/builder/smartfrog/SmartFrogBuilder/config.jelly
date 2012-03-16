@@ -2,48 +2,48 @@
 
 <f:section title="SmartFrog environment">  
 
-    <f:entry title="SmartFrog instance">
-        <select class="setting-input" name="sb.smartFrogName">
+    <f:entry title="SmartFrog instance" field="smartFrogName">
+        <select class="setting-input">
             <j:forEach var="sfInstance" items="${descriptor.smartfrogInstances}">
-                <f:option value="${sfInstance.getName()}" selected="${sfInstance.getName()==instance.getSmartFrogName()}">${sfInstance.getName()}</f:option>
+                <f:option value="${sfInstance.getName()}" selected="${sfInstance.getName()==it.getSmartFrogName()}">${sfInstance.getName()}</f:option>
             </j:forEach>
         </select>
     </f:entry>
 
-    <f:entry title="Deploy host" description="Name of the machine for initial deployment.">
-      <input class="setting-input" name="sb.deployHost" type="text" value="${instance.deployHost}"/>
+    <f:entry title="Deploy host" field="deployHost" description="Name of the machine for initial deployment.">
+    	<f:textbox />
     </f:entry>
 
-    <f:entry title="Target hosts" description="Whitespace-separated list of target host machines.">
-      <input class="setting-input" name="sb.hosts" type="text" value="${instance.hosts}"/>
+    <f:entry title="Target hosts" fiel="hosts" description="Whitespace-separated list of target host machines.">
+    	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME" description="List of colon-separated paths pointing to directories to SmartFrog components.">
-      <input class="setting-input" name="sb.sfUserHome" type="text" value="${instance.sfUserHome}"/>
+    <f:entry title="SFUSERHOME" filed="sfUserHome" description="List of colon-separated paths pointing to directories to SmartFrog components.">
+   		<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
-      <input class="setting-input" name="sb.sfUserHome2" type="text" value="${instance.sfUserHome2}"/>
+    <f:entry title="SFUSERHOME2" filed="sfUserHome2" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
-      <input class="setting-input" name="sb.sfUserHome3" type="text" value="${instance.sfUserHome3}"/>
+    <f:entry title="SFUSERHOME3" filed="sfUserHome3" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    	<f:textbox />
     </f:entry>
 
-    <f:entry title="SFUSERHOME4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
-      <input class="setting-input" name="sb.sfUserHome4" type="text" value="${instance.sfUserHome4}"/>
+    <f:entry title="SFUSERHOME4" filed="sfUserHome4" description="Path to put on classpath and load classes from JARs passed to sfDaemon.">
+    	<f:textbox />
     </f:entry>
 
     <!-- Since 3.17.014, see http://jira.smartfrog.org/jira/browse/SFOS-1234 for more information. -->
-    <f:entry title="SF_OPTS" description="Arguments passed to JVM (since 3.17.014 and higher).">
-      <input class="setting-input" name="sb.sfOpts" type="text" value="${instance.sfOpts}"/>
+    <f:entry title="SF_OPTS" field="sfOpts" description="Arguments passed to JVM (since 3.17.014 and higher).">
+    	<f:textbox />
     </f:entry>
 
    <f:block>
      <table>
-       <f:optionalBlock name="sb.useAltIni" title="Use an alternate non-default SmartFrog configuration" checked="${instance.useAltIni}">
-         <f:entry title="Path to alternate SmartFrog configuration">
-           <f:textbox name="sb.sfIni" value="${instance.sfIni}"/>
+       <f:optionalBlock field="useAltIni" title="Use an alternate non-default SmartFrog configuration">
+         <f:entry title="Path to alternate SmartFrog configuration" field="sfIni">
+           <f:textbox />
          </f:entry>
        </f:optionalBlock>
      </table>
@@ -51,9 +51,9 @@
 
 </f:section>
 
-<f:section title="Deployment configuration">  
-    <f:entry title="Deployment name" description="The name of the component to be deployed. The name of the component has to be unique in the running SF environment.">
-      <input class="setting-input" name="sb.scriptName" type="text" value="${instance.scriptName}"/>
+<!--  f:section title="Deployment configuration">  
+    <f:entry title="Deployment name" field="scriptName" description="The name of the component to be deployed. The name of the component has to be unique in the running SF environment.">
+      <f:textbox />
     </f:entry>
 
       <f:radioBlock name="sb.scriptSource" value="path" title="Get description from file" checked="${instance.scriptSource=='path'}">
@@ -72,6 +72,6 @@
         </f:entry>
       </f:radioBlock>
 
-</f:section>
+</f:section -->
 
 </j:jelly>

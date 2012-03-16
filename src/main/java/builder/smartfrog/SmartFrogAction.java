@@ -21,17 +21,29 @@
  */
 package builder.smartfrog;
 
-import builder.smartfrog.util.LineFilterOutputStream;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.Action;
 import hudson.model.Build;
 import hudson.model.LargeText;
-import java.io.*;
+import hudson.model.AbstractBuild;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.Reader;
+
 import java.util.Map;
 import java.util.Vector;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+import builder.smartfrog.util.LineFilterOutputStream;
 
 /**
  *
@@ -43,7 +55,7 @@ public class SmartFrogAction implements Action, Runnable {
     
    private String host;
    private State state = State.STARTING;
-   private Build<?,?> build;
+   private AbstractBuild<?,?> build;
    
    private transient SmartFrogBuilder builder;
    private transient Proc proc;
@@ -91,16 +103,13 @@ public class SmartFrogAction implements Action, Runnable {
       this.host = host;                
    }
    
-   public void perform(final Build<?, ?> build, final Launcher launcher) {
+   public void perform(final AbstractBuild<?, ?> build, final Launcher launcher) {
       this.build = build;
       this.launcher = launcher;      
       
       String[] cl = builder.buildDaemonCommandLine(host);      
       
       Map<String,String> env = build.getEnvVars();
-      //JDK jdk = build.getProject().getJDK();
-      //if(jdk !=null) jdk.buildEnvVars(env);
-            
       try {         
          log = new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile())));
          proc = launcher.launch(cl, env, log, build.getParent().getWorkspace());
@@ -124,7 +133,7 @@ public class SmartFrogAction implements Action, Runnable {
       return "console-" + host;
    }
 
-   public Build<?,?> getOwnerBuild() {
+   public AbstractBuild<?,?> getOwnerBuild() {
        return build;
    }
    
@@ -175,7 +184,6 @@ public class SmartFrogAction implements Action, Runnable {
    }
    
    public void run() {
-
       // wait for proccess to finish
       try
       {
@@ -187,8 +195,7 @@ public class SmartFrogAction implements Action, Runnable {
          setState(State.FAILED);
          return;
       }
-      setState(State.FAILED);
-      
+      setState(State.FAILED);  
    }
    
    public void interrupt() {
@@ -201,13 +208,6 @@ public class SmartFrogAction implements Action, Runnable {
       } catch (InterruptedException ioe) {
           
       }
-      /*
-      try {
-         proc.kill();
-      } catch (IOException ex) {
-      } catch (InterruptedException ex) {
-      }
-       */
    }
       
    

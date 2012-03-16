@@ -22,16 +22,163 @@
 package builder.smartfrog;
 
 import builder.smartfrog.SmartFrogAction.State;
+
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixConfiguration;
-import hudson.model.*;
+
+import hudson.model.AbstractBuild;
+import hudson.model.Build;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.Descriptor;
+import hudson.model.JDK;
+import hudson.model.Project;
+
 import hudson.tasks.Builder;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import builder.smartfrog.SmartFrogAction.State;
+
+/**
+ * SmartFrog Hudson/Jenkins plugin main.
+ * 
+ * @author <a href="mailto:rhusar@redhat.com">Radoslav Husar</a>
+ * @author vjuranek
+ * 
+ */
+public class SmartFrogBuilder extends Builder implements SmartFrogActionListener {
+
+    public static final String ENV_SF_HOME = "SFHOME";
+    public static final String ENV_SF_USER_HOME = "SFUSERHOME";
+    public static final long HEARTBEAT_PERIOD = 10000;
+    
+    private String smartFrogName;
+    private String deployHost;
+    private String hosts;
+    private String sfUserHome;
+    private String sfUserHome2;
+    private String sfUserHome3;
+    private String sfUserHome4;
+    private String sfOpts;
+    private String sfIni;
+    private boolean useAltIni;
+    private String scriptName;
+    private String scriptSource;
+    private String scriptPath;
+    private String scriptContent;
+    
+    private Project project;
+    private String exportMatrixAxes = "";
+    private String defaultScriptPath;
+    
+    private transient BuildListener listener;
+    private transient boolean componentTerminated = false;
+    private transient boolean terminatedNormally;
+
+    @DataBoundConstructor
+    public SmartFrogBuilder(String smartFrogName, String deployHost, String hosts, String sfUserHome, String sfUserHome2, 
+            String sfUserHome3, String sfUserHome4, String sfOpts, boolean useAltIni, String sfIni, String scriptName,
+            String scriptSource, String scriptPath, String scriptContent){
+        this.smartFrogName = smartFrogName;
+        this.deployHost = deployHost; 
+        this.hosts = hosts; 
+        this.sfUserHome = sfUserHome;
+        this.sfUserHome2 = sfUserHome2;
+        this.sfUserHome3 = sfUserHome3;
+        this.sfUserHome4 = sfUserHome4;
+        this.sfOpts = sfOpts;
+        this.useAltIni = useAltIni;
+        this.sfIni = sfIni;
+        this.scriptName = scriptName;
+        this.scriptSource = scriptSource;
+        this.scriptPath = scriptPath;
+        this.scriptContent = scriptContent;
+    }
+    
+    public String getSmartFrogName() {
+        return smartFrogName;
+    }
+
+    public String getDeployHost() {
+        return deployHost;
+    }
+
+    public String getHosts() {
+        return hosts;
+    }
+
+    public String getSfUserHome() {
+        return sfUserHome;
+    }
+
+    // Additional SFUSERHOMEs, since 1 is used for Support Libs (terminate hooks).
+    public String getSfUserHome2() {
+        return sfUserHome2;
+    }
+
+    public String getSfUserHome3() {
+        return sfUserHome3;
+    }
+    
+    public String getSfUserHome4() {
+        return sfUserHome4;
+    }
+
+    public String getSfOpts() {
+        return sfOpts;
+    }
+
+    public String getSfIni() {
+        return sfIni;
+    }
+
+    public boolean isUseAltIni() {
+        return useAltIni;
+    }
+
+    public String getScriptName() {
+        return scriptName;
+    }
+
+    public String getScriptSource() {
+        return scriptSource;
+    }
+
+    public String getScriptPath() {
+        return scriptPath;
+    }
+
+    public String getScriptContent() {
+        return scriptContent;
+    }
+
+    @Override
+    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener)
+            throws InterruptedException {
+
+        componentTerminated = false;
+
+        this.listener = listener;
+        String[] hostList = hosts.split("[ \t]+");
+
+        this.project = (Project)build.getProject();
+
+        try {
+            if (scriptSource.equals("content")) {
+                createDefaultScriptFile(scriptContent);
+=======
 
 /**
  * SmartFrog Hudson/Jenkins plugin main.
@@ -162,406 +309,272 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                   allStarted = false;
                   break;
                }
+>>>>>>> d91ddee... [JBQA-6068] remove some email addresses and internal references
             }
-            if (allStarted) {
-               break;
-            }
-            try {
-               wait();
-            } catch (InterruptedException ioe) {
-               for (SmartFrogAction a : sfActions) {
-                  a.interrupt();
-               }
-               build.setResult(Result.FAILURE);
-               return false;
-            }
-         } while (allStarted == false);
-      }
+        } catch (IOException ioe) {
+            listener.getLogger().println("Could not get canonical path to workspace:" + ioe);
+            ioe.printStackTrace();
+            build.setResult(Result.FAILURE);
+            return false;
+        }
 
-      // deploy terminate hook
-      String[] deploySLCl = buildDeployCommandLine(deployHost, getSupportDescPath(), "terminate-hook");
-      try {
-         int status = launcher.launch(deploySLCl, build.getEnvVars(), listener.getLogger(),
-                 build.getParent().getWorkspace()).join();
-         if (status != 0) {
-            listener.getLogger().println("Deployment of support component failed.");
+        /**
+         * Export Matrix parameters if matrix project block
+         * 
+         * If problems occur, then blame:
+         * 
+         * @author rhusar@redhat.com
+         * @version 2009-07-08
+         */
+        if (project instanceof MatrixConfiguration) {
+            MatrixConfiguration matrixConfProject = (MatrixConfiguration) project;
+
+            // Get the matrix configuration.
+            Map<String, String> matrixConfMap = null;
+            matrixConfMap = matrixConfProject.getCombination();
+
+            exportMatrixAxes = " ";
+
+            // Iterate and only "SF_" prefixed variables.
+            for (Map.Entry<String, String> entry : matrixConfMap.entrySet()) {
+                if (entry.getKey().startsWith("SF_")) {
+                    exportMatrixAxes = exportMatrixAxes + "export " + entry.getKey() + "=" + entry.getValue() + "; ";
+                }
+            }
+            System.out.println("SFPlugin: from matrix: " + matrixConfMap + "; exporting: " + exportMatrixAxes);
+        }
+
+        SmartFrogAction[] sfActions = new SmartFrogAction[hostList.length];
+        // start daemons
+        for (int k = 0; k < hostList.length; k++) {
+            String host = hostList[k];
+            SmartFrogAction a = new SmartFrogAction(this, host);
+            build.addAction(a);
+            a.addStateListener(this);
+            sfActions[k] = a;
+            a.perform(build, launcher);
+        }
+
+        // wait until all daemons are ready
+        synchronized (this) {
+            boolean allStarted = false;
+            do {
+                allStarted = true;
+                for (SmartFrogAction a : sfActions) {
+                    if (a.getState() != SmartFrogAction.State.RUNNING) {
+                        if (a.getState() == SmartFrogAction.State.FAILED) {
+                            listener.getLogger().println("SmartFrog deamon on host " + a.getHost() + " failed.");
+                            build.setResult(Result.FAILURE);
+                            for (SmartFrogAction act : sfActions) {
+                                act.interrupt();
+                            }
+                            return false;
+                        }
+                        allStarted = false;
+                        break;
+                    }
+                }
+                if (allStarted) {
+                    break;
+                }
+                try {
+                    wait();
+                } catch (InterruptedException ioe) {
+                    for (SmartFrogAction a : sfActions) {
+                        a.interrupt();
+                    }
+                    build.setResult(Result.FAILURE);
+                    return false;
+                }
+            } while (allStarted == false);
+        }
+
+        // deploy terminate hook
+        String[] deploySLCl = buildDeployCommandLine(deployHost, getSupportDescPath(), "terminate-hook");
+        try {
+            int status = launcher.launch(deploySLCl, build.getEnvVars(), listener.getLogger(),
+                    build.getParent().getWorkspace()).join();
+            if (status != 0) {
+                listener.getLogger().println("Deployment of support component failed.");
+                build.setResult(Result.FAILURE);
+                for (SmartFrogAction act : sfActions) {
+                    act.interrupt();
+                }
+                return false;
+            }
+        } catch (IOException ioe) {
             build.setResult(Result.FAILURE);
             for (SmartFrogAction act : sfActions) {
-               act.interrupt();
+                act.interrupt();
             }
             return false;
-         }
-      } catch (IOException ioe) {
-         build.setResult(Result.FAILURE);
-         for (SmartFrogAction act : sfActions) {
-            act.interrupt();
-         }
-         return false;
-      }
+        }
 
-      // deploy script
-      String[] deployCl = buildDeployCommandLine(deployHost);
-      try {
-         int status = launcher.launch(deployCl, build.getEnvVars(), listener.getLogger(),
-                 build.getParent().getWorkspace()).join();
-         if (status != 0) {
-            listener.getLogger().println("Deployment failed.");
+        // deploy script
+        String[] deployCl = buildDeployCommandLine(deployHost);
+        try {
+            int status = launcher.launch(deployCl, build.getEnvVars(), listener.getLogger(),
+                    build.getParent().getWorkspace()).join();
+            if (status != 0) {
+                listener.getLogger().println("Deployment failed.");
+                build.setResult(Result.FAILURE);
+                for (SmartFrogAction act : sfActions) {
+                    act.interrupt();
+                }
+                return false;
+            }
+        } catch (IOException ioe) {
             build.setResult(Result.FAILURE);
             for (SmartFrogAction act : sfActions) {
-               act.interrupt();
+                act.interrupt();
             }
             return false;
-         }
-      } catch (IOException ioe) {
-         build.setResult(Result.FAILURE);
-         for (SmartFrogAction act : sfActions) {
-            act.interrupt();
-         }
-         return false;
-      }
+        }
 
-      // wait for component termination
-
-      synchronized (this) {
-         while (!componentTerminated) {
-            try {
-               wait();
-            } catch (InterruptedException ioe) {
-               for (SmartFrogAction a : sfActions) {
-                  a.interrupt();
-               }
-               build.setResult(Result.ABORTED);
-               return false;
+        // wait for component termination
+        synchronized (this) {
+            while (!componentTerminated) {
+                try {
+                    wait();
+                } catch (InterruptedException ioe) {
+                    for (SmartFrogAction a : sfActions) {
+                        a.interrupt();
+                    }
+                    build.setResult(Result.ABORTED);
+                    return false;
+                }
             }
-         }
-      }
+        }
 
-      // periodically check for component status, wait until deployment is finished
-      /*
-      String[] diagCl = buildDiagCommandLine(deployHost);
-      boolean running = true;
-      while (running) {
-      try {
-      int status = launcher.launch(diagCl, build.getEnvVars(), listener.getLogger(), build.getParent().getWorkspace()).join();
-      running = status == 0;
-      synchronized (this) {
-      wait(HEARTBEAT_PERIOD);
-      }
-      } catch (IOException ex) {
-      build.setResult(Result.FAILURE);
-      for (SmartFrogAction act : sfActions) {
-      act.interrupt();
-      }
-      return false;
-      } catch (InterruptedException ie) {
-      for (SmartFrogAction a : sfActions) {
-      a.interrupt();
-      }
-      build.setResult(Result.FAILURE);
-      return false;
-      }
-      }
-       */
+        for (SmartFrogAction act : sfActions) {
+            act.interrupt();
+        }
+        build.setResult(terminatedNormally ? Result.SUCCESS : Result.FAILURE);
 
-      for (SmartFrogAction act : sfActions) {
-         act.interrupt();
-      }
-      build.setResult(terminatedNormally ? Result.SUCCESS : Result.FAILURE);
+        return true;
+    }
 
-      return true;
-   }
-   /**
-    * Descriptor should be singleton.
-    */
-   public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
 
-   public String getSmartFrogName() {
-      return smartFrogName;
-   }
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<Builder> {
 
-   public void setSmartFrogName(String smartFrogName) {
-      this.smartFrogName = smartFrogName;
-   }
+        private List<SmartFrogInstance> smartfrogInstances = new ArrayList<SmartFrogInstance>();
 
-   @Extension
-   public static final class DescriptorImpl extends Descriptor<Builder> {
+        public DescriptorImpl() {
+            super(SmartFrogBuilder.class);
+            load();
+        }
 
-      private SmartFrogInstance[] smartfrogInstances = new SmartFrogInstance[0];
+        public List<SmartFrogInstance> getSmartfrogInstances() {
+            return smartfrogInstances;
+        }
+        
+        public String getDisplayName() {
+            return "Deploy SmartFrog component";
+        }
 
-      public DescriptorImpl() {
-         super(SmartFrogBuilder.class);
-         load();
-      }
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            smartfrogInstances.clear();
+            smartfrogInstances.addAll(req.bindJSONToList(SmartFrogInstance.class, json.get("smartfrogInstances")));
+            save();
+            return super.configure(req, json);
+        }
+/*
+        @Override                                                                                                               
+        public SmartFrogBuilder newInstance(StaplerRequest req) throws hudson.model.Descriptor.FormException {                                                                                                                                    
+           SmartFrogBuilder sb = new SmartFrogBuilder();                                                                        
+           req.bindParameters(sb, "sb.");                                                                                       
+                                                                                                                                
+           return sb;                                                                                                           
+        }     
+*/        
+    }
 
-      /**
-       * This human readable name is used in the configuration screen.
-       *
-       * @return String name to display
-       */
-      public String getDisplayName() {
-         return "Deploy SmartFrog component";
-      }
+    protected String[] buildDaemonCommandLine(String host) {
+        String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
+        return new String[] { "/bin/bash", "-xe", getSfInstance().getSupport() + "/runSF.sh", host,
+                getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3, sfUserHome4,
+                getWorkspacePath(), getSfOpts(), iniPath, exportMatrixAxes };
+    }
 
-      @Override
-      public boolean configure(StaplerRequest req) throws FormException {
-         // to persist global configuration information,
-         // set that to properties and call save().
-         String[] names = req.getParameterValues("sfname");
-         String[] paths = req.getParameterValues("sfpath");
-         String[] support = req.getParameterValues("sfsupport");
+    protected String[] buildStopDaemonCommandLine(String host) {
+        return new String[] { "/bin/bash", "-xe", getSfInstance().getSupport() + "/stopSF.sh", host,
+                getSfInstance().getPath(), sfUserHome };
+    }
 
-         int count = (names == null) ? 0 : names.length;
+    protected String[] buildDeployCommandLine(String host) {
+        String deployPath;
+        if ((scriptSource != null) && scriptSource.equals("path")) {
+            deployPath = scriptPath;
+        } else {
+            deployPath = getDefaultScriptFile().getPath();
+        }
+        return buildDeployCommandLine(host, deployPath);
+    }
 
-         smartfrogInstances = new SmartFrogInstance[count];
+    protected String[] buildDeployCommandLine(String host, String deployPath) {
+        return buildDeployCommandLine(host, deployPath, scriptName);
+    }
 
-         for (int k = 0; k < count; k++) {
-            smartfrogInstances[k] = new SmartFrogInstance(names[k], paths[k], support[k]);
-         }
+    protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
+        return new String[] { "/bin/bash", "-xe", getSfInstance().getSupport() + "/deploySF.sh", host,
+                getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3, sfUserHome4,
+                deployPath, componentName, getWorkspacePath(), exportMatrixAxes };
+    }
 
-         save();
-         return true;
-      }
+    protected SmartFrogInstance getSfInstance() {
+        for (SmartFrogInstance i : getDescriptor().getSmartfrogInstances()) {
+            if (i.getName().equals(getSmartFrogName())) {
+                return i;
+            }
+        }
+        return null;
+    }
 
-      @Override
-      public SmartFrogBuilder newInstance(StaplerRequest req) throws hudson.model.Descriptor.FormException {
+    private void createDefaultScriptFile(String command) throws InterruptedException, IOException {
+        FilePath path = project.getWorkspace().createTextTempFile("deployScript", ".sf", command, true);
+        defaultScriptPath = path.getRemote();
+    }
 
-         SmartFrogBuilder sb = new SmartFrogBuilder();
-         req.bindParameters(sb, "sb.");
+    private File getDefaultScriptFile() {
+        return new File(defaultScriptPath);
+    }
 
-         return sb;
-      }
+ 
+    public synchronized void stateChanged(SmartFrogAction action, State newState) {
+        notifyAll();
+        if (newState == SmartFrogAction.State.RUNNING) {
+            listener.getLogger().println("SmartFrog deamon on host " + action.getHost() + " is running.");
+        }
+    }
 
-      public SmartFrogInstance[] getSmartfrogInstances() {
-         return smartfrogInstances;
-      }
+    private String getWorkspacePath() {
+        try {
+            return new File(project.getWorkspace().toURI()).getCanonicalPath();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        return null;
+    }
 
-      public void setSmartfrogInstances(SmartFrogInstance[] smartfrogInstances) {
-         this.smartfrogInstances = smartfrogInstances;
-      }
-   }
+    private String getSupportLibPath() {
+        return getSfInstance().getSupport();
+    }
 
-   protected String[] buildDaemonCommandLine(String host) {
-      String iniPath = useAltIni ? sfIni : getSfInstance().getPath() + "/bin/default.ini";
-      return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getSupport() + "/runSF.sh",
-                 host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2,
-                 sfUserHome3, sfUserHome4, getWorkspacePath(), getSfOpts(), iniPath, exportMatrixAxes};
-   }
+    private String getSupportDescPath() {
+        return getSfInstance().getSupport() + "/hudson-support.sf";
+    }
 
-   protected String[] buildStopDaemonCommandLine(String host) {
-      return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getSupport() + "/stopSF.sh",
-                 host, getSfInstance().getPath(), sfUserHome};
-   }
-
-   protected String[] buildDeployCommandLine(String host) {
-      String deployPath;
-      if ((scriptSource != null) && scriptSource.equals("path")) {
-         deployPath = scriptPath;
-      } else {
-         deployPath = getDefaultScriptFile().getPath();
-      }
-      return buildDeployCommandLine(host, deployPath);
-   }
-
-   protected String[] buildDeployCommandLine(String host, String deployPath) {
-      return buildDeployCommandLine(host, deployPath, scriptName);
-   }
-
-   protected String[] buildDeployCommandLine(String host, String deployPath, String componentName) {
-      return new String[]{"/bin/bash", "-xe",
-                 getSfInstance().getSupport() + "/deploySF.sh",
-                 host, getSfInstance().getPath(), sfUserHome, getSupportLibPath(), sfUserHome2, sfUserHome3,
-                 sfUserHome4, deployPath, componentName, getWorkspacePath(), exportMatrixAxes};
-   }
-
-   /* protected String[] buildDiagCommandLine(String host) {
-   return new String[]{"/bin/bash", "-xe", getClass().getResource("diagnoseSF.sh").getFile(),
-   host, getSfInstance().getPath(), sfUserHome, scriptName};
-   } */
-   protected SmartFrogInstance getSfInstance() {
-      for (SmartFrogInstance i : DESCRIPTOR.getSmartfrogInstances()) {
-         if (i.getName().equals(getSmartFrogName())) {
-            return i;
-         }
-      }
-      return null;
-   }
-
-   private void createDefaultScriptFile(String command) throws InterruptedException, IOException {
-      FilePath path = project.getWorkspace().createTextTempFile("deployScript", ".sf", command, true);
-      defaultScriptPath = path.getRemote();
-   }
-
-   private File getDefaultScriptFile() {
-      //return new File(getWorkspacePath(), "deployScript.sf");
-      return new File(defaultScriptPath);
-   }
-
-   public String getHosts() {
-      return hosts;
-   }
-
-   public void setHosts(String hosts) {
-      this.hosts = hosts;
-   }
-
-   public String getDeployHost() {
-      return deployHost;
-   }
-
-   public void setDeployHost(String deployHost) {
-      this.deployHost = deployHost;
-   }
-
-   public String getSfUserHome() {
-      return sfUserHome;
-   }
-
-   public void setSfUserHome(String sfUserHome) {
-      this.sfUserHome = sfUserHome;
-   }
-
-   // Additional SFUSERHOMEs, since 1 is used for Support Libs (terminate hooks).
-   public String getSfUserHome2() {
-      return sfUserHome2;
-   }
-
-   public void setSfUserHome2(String sfUserHome2) {
-      this.sfUserHome2 = sfUserHome2;
-   }
-
-   public String getSfUserHome3() {
-      return sfUserHome3;
-   }
-
-   public void setSfUserHome3(String sfUserHome3) {
-      this.sfUserHome3 = sfUserHome3;
-   }
-
-   public String getSfUserHome4() {
-      return sfUserHome4;
-   }
-
-   public void setSfUserHome4(String sfUserHome4) {
-      this.sfUserHome4 = sfUserHome4;
-   }
-
-   public String getScriptName() {
-      return scriptName;
-   }
-
-   public void setScriptName(String scriptName) {
-      this.scriptName = scriptName;
-   }
-
-   public String getScriptSource() {
-      return scriptSource;
-   }
-
-   public void setScriptSource(String scriptSource) {
-      this.scriptSource = scriptSource;
-   }
-
-   public String getScriptPath() {
-      return scriptPath;
-   }
-
-   public void setScriptPath(String scriptPath) {
-      this.scriptPath = scriptPath;
-   }
-
-   public String getScriptContent() {
-      return scriptContent;
-   /*
-   File f = getDefaultScriptFile();
-   if (! f.exists()) return null;
-   try {
-   BufferedReader r = new BufferedReader(new FileReader(f));
-   StringWriter w = new StringWriter();
-   BufferedWriter bw = new BufferedWriter(w);
-   String line = r.readLine();
-   while (line != null) {
-   bw.write(line);
-   bw.newLine();
-   line = r.readLine();
-   }
-   bw.close();
-   return w.toString();
-   } catch (IOException ioe) {
-   return null;
-   }
-    */
-   }
-
-   public void setScriptContent(String scriptContent) {
-      this.scriptContent = scriptContent;
-   /*
-   File f = getDefaultScriptFile();
-   try {
-   BufferedWriter w = new BufferedWriter(new FileWriter(f));
-   w.write(scriptContent);
-   w.close();
-   } catch (Exception e) {           
-   }
-    */
-   }
-
-   public synchronized void stateChanged(SmartFrogAction action, State newState) {
-      notifyAll();
-      if (newState == SmartFrogAction.State.RUNNING) {
-         listener.getLogger().println("SmartFrog deamon on host " + action.getHost() + " is running.");
-      }
-   }
-
-   public String getSfOpts() {
-      return sfOpts;
-   }
-
-   public void setSfOpts(String sfOpts) {
-      this.sfOpts = sfOpts;
-   }
-
-   public boolean isUseAltIni() {
-      return useAltIni;
-   }
-
-   public void setUseAltIni(boolean useAltIni) {
-      this.useAltIni = useAltIni;
-   }
-
-   public String getSfIni() {
-      return sfIni;
-   }
-
-   public void setSfIni(String sfIni) {
-      this.sfIni = sfIni;
-   }
-
-   private String getWorkspacePath() {
-      try {
-         return new File(project.getWorkspace().toURI()).getCanonicalPath();
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-      } catch (InterruptedException ie) {
-         ie.printStackTrace();
-      }
-      return null;
-   }
-
-   private String getSupportLibPath() {
-      //return getClass().getResource("sf-lib").getFile();
-      return getSfInstance().getSupport();
-   }
-
-   private String getSupportDescPath() {
-      //return getClass().getResource("hudson-support.sf").getFile();
-      return getSfInstance().getSupport() + "/hudson-support.sf";
-   }
-
-   public synchronized void componentTerminated(boolean normal) {
-      this.componentTerminated = true;
-      this.terminatedNormally = normal;
-      notifyAll();
-   }
+    public synchronized void componentTerminated(boolean normal) {
+        this.componentTerminated = true;
+        this.terminatedNormally = normal;
+        notifyAll();
+    }
 }

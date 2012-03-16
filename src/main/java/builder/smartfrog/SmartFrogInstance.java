@@ -21,12 +21,15 @@
  */
 package builder.smartfrog;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 /**
  * Represents an installation object - name of the SmartFrog environment installation
  * and the path where it's located.
  *
  * @author Dominik Pospisil
  * @author <a href="http://www.radoslavhusar.com/">Radoslav Husar</a>
+ * @author vjuranek
  */
 public class SmartFrogInstance {
 
@@ -34,9 +37,7 @@ public class SmartFrogInstance {
    private String path;
    private String support;
 
-   public SmartFrogInstance() {
-   }
-
+   @DataBoundConstructor
    public SmartFrogInstance(String name, String path, String support) {
       this.name = name;
       this.path = path;
@@ -47,16 +48,8 @@ public class SmartFrogInstance {
       return name;
    }
 
-   public void setName(String name) {
-      this.name = name;
-   }
-
    public String getPath() {
       return path;
-   }
-
-   public void setPath(String path) {
-      this.path = path;
    }
 
    /**
@@ -66,7 +59,4 @@ public class SmartFrogInstance {
       return support;
    }
 
-   public void setSupport(String support) {
-      this.support = support;
-   }
 }
