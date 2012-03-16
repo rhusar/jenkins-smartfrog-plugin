@@ -1,0 +1,28 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+	<table width="100%">
+
+		<f:entry title="Name" field="name"
+			description="name by which others can recognize this installation">
+			<f:textbox />
+		</f:entry>
+
+		<f:entry title="Path" field="path" description="no trailing slash (eg.: /opt/smartfrog)">
+			<f:textbox />
+		</f:entry>
+
+		<f:entry title="Support Files" field="support"
+			description="location mounted on all nodes which contains support files (hudson-support.sf, hudson-support.jar, deploySF.sh, runSF.sh, stopSF.sh)">
+			<f:textbox />
+		</f:entry>
+
+		<f:entry title="">
+			<div align="right">
+				<f:repeatableDeleteButton />
+			</div>
+		</f:entry>
+
+	</table>
+
+</j:jelly>
