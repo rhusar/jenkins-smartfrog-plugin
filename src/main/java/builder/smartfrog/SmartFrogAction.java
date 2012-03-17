@@ -61,7 +61,6 @@ public class SmartFrogAction implements Action, Runnable {
 
     private transient SmartFrogBuilder builder;
     private transient Proc proc;
-    
     private transient Thread execThread;
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
@@ -121,10 +120,6 @@ public class SmartFrogAction implements Action, Runnable {
 
     public void addStateListener(SmartFrogActionListener l) {
         listeners.add(l);
-    }
-
-    public void removeStateListener(SmartFrogActionListener l) {
-        listeners.remove(l);
     }
 
     public State getState() {
