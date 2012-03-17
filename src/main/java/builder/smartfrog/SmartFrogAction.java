@@ -23,7 +23,6 @@ package builder.smartfrog;
 
 import hudson.Launcher;
 import hudson.Proc;
-import hudson.Launcher.ProcStarter;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
@@ -38,7 +37,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.Map;
 import java.util.Vector;
 
 import org.kohsuke.stapler.StaplerRequest;
@@ -103,12 +101,13 @@ public class SmartFrogAction implements Action, Runnable {
             setState(State.FAILED);
             return;
         }
-        setState(State.FAILED);
+        setState(State.FINISHED);
     }
 
     public void interrupt() throws IOException, InterruptedException {
         String[] cl = builder.buildStopDaemonCommandLine(host);
         launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
+        //TODO reliable kill here  - JBQA 2006
     }
 
     private void setState(State s) {
