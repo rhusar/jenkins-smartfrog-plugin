@@ -63,6 +63,7 @@ public class SmartFrogAction implements Action, Runnable {
 
     private transient SmartFrogBuilder builder;
     private transient Proc proc;
+    
     private transient Thread execThread;
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
@@ -108,8 +109,6 @@ public class SmartFrogAction implements Action, Runnable {
     public void interrupt() throws IOException, InterruptedException {
         String[] cl = builder.buildStopDaemonCommandLine(host);
         launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
-        execThread = new Thread(this, "SFDaemon - " + host);
-        execThread.start();
     }
 
     private void setState(State s) {
