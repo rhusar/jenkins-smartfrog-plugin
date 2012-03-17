@@ -1,14 +1,9 @@
 package builder.smartfrog;
 
 import hudson.DescriptorExtensionList;
-import hudson.FilePath;
 import hudson.model.Describable;
-import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Base class for various script sources.
