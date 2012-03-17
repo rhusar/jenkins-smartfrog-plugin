@@ -125,24 +125,15 @@ public class SmartFrogAction implements Action, Runnable {
     public State getState() {
         return state;
     }
-
-    public PrintStream getLogAsText() {
-        return log.getLogger();
-    }
-
-    public Reader getLogReader() throws IOException {
-        File logFile = getLogFile();
-        return new FileReader(logFile);
+    
+    public void doProgressiveLog(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        new LargeText(getLogFile(), !isBuilding()).doProgressText(req, rsp);
     }
 
     public File getLogFile() {
         return new File(build.getRootDir(), host + ".log");
     }
-
-    public void doProgressiveLog(StaplerRequest req, StaplerResponse rsp) throws IOException {
-        new LargeText(getLogFile(), !isBuilding()).doProgressText(req, rsp);
-    }
-
+    
     public boolean isBuilding() {
         return (state != State.FAILED) && (state != State.FINISHED);
     }
