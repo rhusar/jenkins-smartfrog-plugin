@@ -94,14 +94,15 @@ public class SmartFrogAction implements Action, Runnable {
         // wait for proccess to finish
         try {
             proc.join();
+            setState(State.FINISHED);
         } catch (IOException ex) {
             setState(State.FAILED);
-            return;
         } catch (InterruptedException ex) {
             setState(State.FAILED);
-            return;
+        } finally {
+            //TODO reliable kill here  - JBQA 2006
+            log.getLogger().close();
         }
-        setState(State.FINISHED);
     }
 
     public void interrupt() throws IOException, InterruptedException {
