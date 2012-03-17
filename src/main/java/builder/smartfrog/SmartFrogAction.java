@@ -24,7 +24,6 @@ package builder.smartfrog;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.Action;
-import hudson.model.Build;
 import hudson.model.LargeText;
 import hudson.model.AbstractBuild;
 
@@ -36,14 +35,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
-
 import java.util.Map;
 import java.util.Vector;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import builder.smartfrog.util.Functions;
 import builder.smartfrog.util.LineFilterOutputStream;
+
 
 /**
  *
@@ -82,7 +82,7 @@ public class SmartFrogAction implements Action, Runnable {
          if (idx > -1) {
             String compName = line.substring(line.indexOf('[', idx + 15) + 1);
             compName = compName.substring(0, compName.indexOf(']') );
-            if (compName.endsWith(builder.getScriptName())) {
+            if (compName.endsWith(builder.getSfInstance().getName())) {
                builder.componentTerminated(! line.contains("ABNORMAL"));
             }
          }
@@ -107,7 +107,7 @@ public class SmartFrogAction implements Action, Runnable {
       this.build = build;
       this.launcher = launcher;      
       
-      String[] cl = builder.buildDaemonCommandLine(host);      
+      String[] cl = builder.buildDaemonCommandLine(host,Functions.convertWsToCanonicalPath(build.getWorkspace()));      
       
       Map<String,String> env = build.getEnvVars();
       try {         

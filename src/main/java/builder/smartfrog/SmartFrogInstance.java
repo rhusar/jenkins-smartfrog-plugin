@@ -33,6 +33,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class SmartFrogInstance {
 
+   private static final String SUPPORT_SCRIPT = "/hudson-support.sf"; 
+    
    private String name;
    private String path;
    private String support;
@@ -59,4 +61,8 @@ public class SmartFrogInstance {
       return support;
    }
 
+   public String getSupportScriptPath() {
+       return getSupport() + SUPPORT_SCRIPT;
+   }
+   
 }

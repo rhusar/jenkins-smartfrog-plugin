@@ -47,27 +47,12 @@
 
 </f:section>
 
-<!--  f:section title="Deployment configuration">  
-    <f:entry title="Deployment name" field="scriptName" description="The name of the component to be deployed. The name of the component has to be unique in the running SF environment.">
-      <f:textbox />
-    </f:entry>
-
-      <f:radioBlock name="sb.scriptSource" value="path" title="Get description from file" checked="${instance.scriptSource=='path'}">
-        <f:entry title="Path" description="Path pointing to the script to be deployed.">
-          <input class="setting-input" name="sb.scriptPath" type="text" value="${instance.scriptPath}"/>
-        </f:entry>
-      </f:radioBlock>
-
-      <f:radioBlock name="sb.scriptSource" value="content" title="Specify component description" checked="${instance.scriptSource=='content'}">
-        <f:entry title="Script content" description="Deployment description">
-           <textarea name="sb.scriptContent" id="sb.scriptContent" 
-                     class="setting-input" rows="30">
-             <st:out value="${instance.scriptContent}"/>
-           </textarea>
-           <div class="textarea-handle"/>
-        </f:entry>
-      </f:radioBlock>
-
-</f:section -->
+<f:section title="Deployment configuration">
+	<j:invokeStatic var="descriptors" className="builder.smartfrog.ScriptSource" method="all" />
+	<j:set var="instance" value="${instance.scriptSource}" />
+	<j:forEach var="descriptor" items="${descriptors}">
+		<st:include page="${descriptor.configPage}" from="${descriptor}"/>
+	</j:forEach>
+</f:section>
 
 </j:jelly>
