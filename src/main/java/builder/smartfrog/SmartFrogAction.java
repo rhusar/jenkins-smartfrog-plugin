@@ -110,6 +110,10 @@ public class SmartFrogAction implements Action, Runnable {
         //TODO reliable kill here  - JBQA 2006
     }
 
+    public State getState() {
+        return state;
+    }
+    
     private void setState(State s) {
         if (this.getState() == s)
             return;
@@ -122,10 +126,6 @@ public class SmartFrogAction implements Action, Runnable {
         listeners.add(l);
     }
 
-    public State getState() {
-        return state;
-    }
-    
     public void doProgressiveLog(StaplerRequest req, StaplerResponse rsp) throws IOException {
         new LargeText(getLogFile(), !isBuilding()).doProgressText(req, rsp);
     }
