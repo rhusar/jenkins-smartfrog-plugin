@@ -23,7 +23,10 @@ package builder.smartfrog;
 
 import hudson.Launcher;
 import hudson.Proc;
+import hudson.Launcher.ProcStarter;
 import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.StreamBuildListener;
 import hudson.model.AbstractBuild;
 
 import java.io.File;
@@ -34,6 +37,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Vector;
 
@@ -62,7 +66,7 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Thread execThread;
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
-    private transient PrintStream log;
+    private transient BuildListener log;
 
     public SmartFrogAction(SmartFrogBuilder builder, String host) {
         this.builder = builder;
@@ -73,22 +77,18 @@ public class SmartFrogAction implements Action, Runnable {
     public String getHost() {
         return host;
     }
-    
-    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher) {
+
+    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher) throws IOException,
+            InterruptedException {
         this.build = build;
         this.launcher = launcher;
 
         String[] cl = builder.buildDaemonCommandLine(host, Functions.convertWsToCanonicalPath(build.getWorkspace()));
-
-        Map<String, String> env = build.getEnvVars();
-        try {
-            log = new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile())));
-            proc = launcher.launch(cl, env, log, build.getParent().getWorkspace());
-            execThread = new Thread(this, "SFDaemon - " + host);
-            execThread.start();
-        } catch (IOException ioe) {
-
-        }
+        log = new StreamBuildListener(new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile()))),
+                Charset.defaultCharset());
+        ProcStarter proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace());
+        execThread = new Thread(this, "SFDaemon - " + host);
+        execThread.start();
     }
 
     public void run() {
@@ -105,16 +105,11 @@ public class SmartFrogAction implements Action, Runnable {
         setState(State.FAILED);
     }
 
-    public void interrupt() {
+    public void interrupt() throws IOException, InterruptedException {
         String[] cl = builder.buildStopDaemonCommandLine(host);
-        try {
-            launcher.launch(cl, build.getEnvVars(), log, build.getParent().getWorkspace()).join();
-            execThread = new Thread(this, "SFDaemon - " + host);
-            execThread.start();
-        } catch (IOException ioe) {
-        } catch (InterruptedException ioe) {
-
-        }
+        launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
+        execThread = new Thread(this, "SFDaemon - " + host);
+        execThread.start();
     }
 
     private void setState(State s) {
@@ -124,7 +119,7 @@ public class SmartFrogAction implements Action, Runnable {
         for (SmartFrogActionListener l : listeners)
             l.stateChanged(this, getState());
     }
-    
+
     public void addStateListener(SmartFrogActionListener l) {
         listeners.add(l);
     }
@@ -138,14 +133,14 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public PrintStream getLogAsText() {
-        return log;
+        return log.getLogger();
     }
 
     public Reader getLogReader() throws IOException {
         File logFile = getLogFile();
         return new FileReader(logFile);
     }
-    
+
     public File getLogFile() {
         return new File(build.getRootDir(), host + ".log");
     }
@@ -157,7 +152,7 @@ public class SmartFrogAction implements Action, Runnable {
     public boolean isBuilding() {
         return (state != State.FAILED) && (state != State.FINISHED);
     }
-    
+
     public String getIconFileName() {
         return "/plugin/org.jboss.hudson.smartfrog/icons/smartfrog24.png";
     }
@@ -169,7 +164,7 @@ public class SmartFrogAction implements Action, Runnable {
     public String getUrlName() {
         return "console-" + host;
     }
-    
+
     private class SFFilterOutputStream extends LineFilterOutputStream {
 
         private OutputStreamWriter os;

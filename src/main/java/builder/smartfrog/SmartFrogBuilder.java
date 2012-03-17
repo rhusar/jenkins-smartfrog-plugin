@@ -144,7 +144,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws InterruptedException {
+        throws IOException, InterruptedException  {
         componentTerminated = false;
 
         // check if SF script exists or create new one
@@ -169,7 +169,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // wait for component termination
         if(!waitForCompletion(build, sfActions))
             return false;
-        // terminte daemons
+        // terminate daemons
         for (SmartFrogAction act : sfActions) {
             act.interrupt();
         }
@@ -214,7 +214,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return exportedMatrixAxes;
     }
 
-    private SmartFrogAction[] createDaemons(AbstractBuild<?, ?> build, Launcher launcher) {
+    private SmartFrogAction[] createDaemons(AbstractBuild<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         String[] hostList = hosts.split("[ \t]+");
         SmartFrogAction[] sfActions = new SmartFrogAction[hostList.length];
         // start daemons
@@ -229,7 +229,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return sfActions;
     }
 
-    private synchronized boolean daemonsReady(AbstractBuild<?, ?> build, BuildListener listener, SmartFrogAction[] sfActions) {
+    private synchronized boolean daemonsReady(AbstractBuild<?, ?> build, BuildListener listener, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
         boolean allStarted = false;
         do {
             allStarted = true;
@@ -264,7 +264,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
     
     private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, SmartFrogAction[] sfActions) 
-        throws InterruptedException {
+        throws IOException, InterruptedException  {
         
         String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook");
         try {
@@ -288,7 +288,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, SmartFrogAction[] sfActions) 
-        throws InterruptedException {
+        throws IOException, InterruptedException  {
         String[] deployCl = buildDeployCommandLine(deployHost, scriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
@@ -311,7 +311,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return true;
     }
     
-    private synchronized boolean waitForCompletion(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions){
+    private synchronized boolean waitForCompletion(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
         while (!componentTerminated) {
             try {
                 wait();
