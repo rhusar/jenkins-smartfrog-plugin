@@ -268,8 +268,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         
         String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook");
         try {
-            int status = launcher.launch(deploySLCl, build.getEnvVars(), listener.getLogger(),
-                    build.getParent().getWorkspace()).join();
+            int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
                 listener.getLogger().println("Deployment of support component failed.");
                 build.setResult(Result.FAILURE);
@@ -293,8 +292,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         String[] deployCl = buildDeployCommandLine(deployHost, scriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
-            int status = launcher.launch(deployCl, build.getEnvVars(), listener.getLogger(),
-                    build.getParent().getWorkspace()).join();
+            int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
                 listener.getLogger().println("Deployment failed.");
                 build.setResult(Result.FAILURE);
