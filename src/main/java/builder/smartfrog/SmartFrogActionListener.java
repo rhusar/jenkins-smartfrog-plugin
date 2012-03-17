@@ -21,6 +21,8 @@
  */
 package builder.smartfrog;
 
+import hudson.model.BuildListener;
+
 /**
  *
  * @author Dominik Pospisil
