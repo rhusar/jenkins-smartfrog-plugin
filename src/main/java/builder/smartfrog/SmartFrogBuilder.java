@@ -71,7 +71,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     
     private ScriptSource scriptSource;
     
-    private Project project;
+    //private Project project;
     private String exportMatrixAxes = "";
     private String defaultScriptPath;
     
@@ -153,8 +153,6 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         this.listener = listener;
         String[] hostList = hosts.split("[ \t]+");
 
-        this.project = (Project)build.getProject();
-
         try {
             if (scriptSource instanceof StringScriptSource) {
                 ((StringScriptSource)scriptSource).createDefaultScriptFile(build);
@@ -174,8 +172,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
          * @author rhusar@redhat.com
          * @version 2009-07-08
          */
-        if (project instanceof MatrixConfiguration) {
-            MatrixConfiguration matrixConfProject = (MatrixConfiguration) project;
+        if (build.getProject() instanceof MatrixConfiguration) {
+            MatrixConfiguration matrixConfProject = (MatrixConfiguration)build.getProject();
 
             // Get the matrix configuration.
             Map<String, String> matrixConfMap = null;
@@ -302,6 +300,38 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return true;
     }
 
+    protected String[] buildDaemonCommandLine(String host, String workspace) {
+        String iniPath = useAltIni ? sfIni : sfInstance.getPath() + "/bin/default.ini";
+        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/runSF.sh", host,
+                sfInstance.getPath(), sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4,
+                workspace, getSfOpts(), iniPath, exportMatrixAxes };
+    }
+
+    protected String[] buildStopDaemonCommandLine(String host) {
+        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/stopSF.sh", host,
+                sfInstance.getPath(), sfUserHome };
+    }
+
+    protected String[] buildDeployCommandLine(String host, String componentName, String workspace) {
+        String defaultScriptPath = scriptSource != null ? scriptSource.getDefaultScriptPath() : "";
+        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host,
+                sfInstance.getPath(), sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4,
+                defaultScriptPath, componentName, workspace, exportMatrixAxes };
+    }
+
+    public synchronized void stateChanged(SmartFrogAction action, State newState) {
+        notifyAll();
+        if (newState == SmartFrogAction.State.RUNNING) {
+            listener.getLogger().println("SmartFrog deamon on host " + action.getHost() + " is running.");
+        }
+    }
+
+    public synchronized void componentTerminated(boolean normal) {
+        this.componentTerminated = true;
+        this.terminatedNormally = normal;
+        notifyAll();
+    }
+    
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
@@ -350,36 +380,5 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         }
         
     }
-
-    protected String[] buildDaemonCommandLine(String host, String workspace) {
-        String iniPath = useAltIni ? sfIni : sfInstance.getPath() + "/bin/default.ini";
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/runSF.sh", host,
-                sfInstance.getPath(), sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4,
-                workspace, getSfOpts(), iniPath, exportMatrixAxes };
-    }
-
-    protected String[] buildStopDaemonCommandLine(String host) {
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/stopSF.sh", host,
-                sfInstance.getPath(), sfUserHome };
-    }
-
-    protected String[] buildDeployCommandLine(String host, String componentName, String workspace) {
-        String defaultScriptPath = scriptSource != null ? scriptSource.getDefaultScriptPath() : "";
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host,
-                sfInstance.getPath(), sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4,
-                defaultScriptPath, componentName, workspace, exportMatrixAxes };
-    }
-
-    public synchronized void stateChanged(SmartFrogAction action, State newState) {
-        notifyAll();
-        if (newState == SmartFrogAction.State.RUNNING) {
-            listener.getLogger().println("SmartFrog deamon on host " + action.getHost() + " is running.");
-        }
-    }
-
-    public synchronized void componentTerminated(boolean normal) {
-        this.componentTerminated = true;
-        this.terminatedNormally = normal;
-        notifyAll();
-    }
+    
 }
