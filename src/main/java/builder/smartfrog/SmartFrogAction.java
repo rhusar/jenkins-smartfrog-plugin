@@ -86,7 +86,7 @@ public class SmartFrogAction implements Action, Runnable {
         String[] cl = builder.buildDaemonCommandLine(host, Functions.convertWsToCanonicalPath(build.getWorkspace()));
         log = new StreamBuildListener(new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile()))),
                 Charset.defaultCharset());
-        ProcStarter proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace());
+        proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).start();
         execThread = new Thread(this, "SFDaemon - " + host);
         execThread.start();
     }
