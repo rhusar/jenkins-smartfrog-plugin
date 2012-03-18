@@ -30,12 +30,10 @@ import hudson.model.AbstractBuild;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Vector;
 
@@ -57,7 +55,7 @@ public class SmartFrogAction implements Action, Runnable {
 
     private final String host;
     private State state;
-    private AbstractBuild<?, ?> build;
+    private AbstractBuild<?, ?> build;  //TODO isn't it better to same build.getRoot instread?
 
     private transient SmartFrogBuilder builder;
     private transient Proc proc;
@@ -169,6 +167,7 @@ public class SmartFrogAction implements Action, Runnable {
                 String compName = line.substring(line.indexOf('[', idx + 15) + 1);
                 compName = compName.substring(0, compName.indexOf(']'));
                 if (compName.endsWith(builder.getSfInstance().getName())) {
+                    //TODO keep this info locally?
                     builder.componentTerminated(!line.contains("ABNORMAL"));
                 }
             }

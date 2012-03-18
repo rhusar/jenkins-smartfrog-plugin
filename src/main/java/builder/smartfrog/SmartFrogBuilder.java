@@ -158,21 +158,28 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // create daemons and run them
         SmartFrogAction[] sfActions = createDaemons(build, launcher);
         // wait until all daemons are ready
-        if(!daemonsReady(build, listener, sfActions))
+        if(!daemonsReady(listener, sfActions)){
+            failBuild(build, sfActions);
             return false;
-        // deploy terminate hook
-        if(!deployTerminateHook(build, launcher, listener, sfActions))
-            return false;
-        // deploy script
-        if(!deployScript(build, launcher, listener, sfActions))
-            return false;
-        // wait for component termination
-        if(!waitForCompletion(build, sfActions))
-            return false;
-        // terminate daemons
-        for (SmartFrogAction act : sfActions) {
-            act.interrupt();
         }
+        // deploy terminate hook
+        if(!deployTerminateHook(build, launcher, listener)){
+            failBuild(build, sfActions);
+            return false;
+        }
+        // deploy script
+        if(!deployScript(build, launcher, listener)){
+            failBuild(build, sfActions);
+            return false;
+        }
+        // wait for component termination
+        if(!waitForCompletion(build)){
+            build.setResult(Result.ABORTED);
+            killAllDaemons(sfActions);
+            return false;
+        }
+        // terminate daemons
+        killAllDaemons(sfActions);
         
         build.setResult(terminatedNormally ? Result.SUCCESS : Result.FAILURE);
         return true;
@@ -214,6 +221,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return exportedMatrixAxes;
     }
 
+    /**
+     * Create daemons and run them 
+     */
     private SmartFrogAction[] createDaemons(AbstractBuild<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         String[] hostList = hosts.split("[ \t]+");
         SmartFrogAction[] sfActions = new SmartFrogAction[hostList.length];
@@ -229,101 +239,90 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return sfActions;
     }
 
-    private synchronized boolean daemonsReady(AbstractBuild<?, ?> build, BuildListener listener, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+    /**
+     * Waits for all daemons to be ready, if one of them fails, fail whole build
+     */
+    private synchronized boolean daemonsReady(BuildListener listener, SmartFrogAction[] sfActions) {
         boolean allStarted = false;
         do {
             allStarted = true;
             for (SmartFrogAction a : sfActions) {
+                if (a.getState() == SmartFrogAction.State.FAILED) {
+                    listener.getLogger().println("SmartFrog deamon on host " + a.getHost() + " failed.");
+                    return false;
+                }
                 if (a.getState() != SmartFrogAction.State.RUNNING) {
-                    if (a.getState() == SmartFrogAction.State.FAILED) {
-                        listener.getLogger().println("SmartFrog deamon on host " + a.getHost() + " failed.");
-                        build.setResult(Result.FAILURE);
-                        for (SmartFrogAction act : sfActions) {
-                            act.interrupt();
-                        }
-                        return false;
-                    }
                     allStarted = false;
-                    break;
+                    break; //TODO really break? If something fails maybe better to check all action for failures first
                 }
             }
-            if (allStarted) {
+            
+            if (allStarted) 
                 break;
-            }
+            
             try {
                 wait();
             } catch (InterruptedException ioe) {
-                for (SmartFrogAction a : sfActions) {
-                    a.interrupt();
-                }
-                build.setResult(Result.FAILURE);
+                listener.getLogger().println("Interrupted - failed.");
                 return false;
             }
         } while (allStarted == false);
         return true;
     }
     
-    private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, SmartFrogAction[] sfActions) 
-        throws IOException, InterruptedException  {
-        
+    private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook");
         try {
             int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
                 listener.getLogger().println("Deployment of support component failed.");
-                build.setResult(Result.FAILURE);
-                for (SmartFrogAction act : sfActions) {
-                    act.interrupt();
-                }
                 return false;
             }
         } catch (IOException ioe) {
-            build.setResult(Result.FAILURE);
-            for (SmartFrogAction act : sfActions) {
-                act.interrupt();
-            }
+            return false;
+        } catch (InterruptedException e){
             return false;
         }
         return true;
     }
 
-    private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, SmartFrogAction[] sfActions) 
-        throws IOException, InterruptedException  {
+    private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         String[] deployCl = buildDeployCommandLine(deployHost, scriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
             int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
                 listener.getLogger().println("Deployment failed.");
-                build.setResult(Result.FAILURE);
-                for (SmartFrogAction act : sfActions) {
-                    act.interrupt();
-                }
                 return false;
             }
         } catch (IOException ioe) {
-            build.setResult(Result.FAILURE);
-            for (SmartFrogAction act : sfActions) {
-                act.interrupt();
-            }
+            return false;
+        } catch (InterruptedException e){
             return false;
         }
         return true;
     }
     
-    private synchronized boolean waitForCompletion(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+    private synchronized boolean waitForCompletion(AbstractBuild<?, ?> build) {
         while (!componentTerminated) {
             try {
                 wait();
             } catch (InterruptedException ioe) {
-                for (SmartFrogAction a : sfActions) {
-                    a.interrupt();
-                }
-                build.setResult(Result.ABORTED);
                 return false;
             }
         }
         return true;
+    }
+    
+    private void killAllDaemons(SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+        for (SmartFrogAction a : sfActions) {
+            a.interrupt();
+        }
+    }
+    
+    private void failBuild(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+        build.setResult(Result.FAILURE);
+        killAllDaemons(sfActions);
     }
     
     protected String[] buildDaemonCommandLine(String host, String workspace) {

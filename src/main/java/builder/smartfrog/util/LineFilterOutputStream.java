@@ -66,6 +66,7 @@ public abstract class LineFilterOutputStream extends FilterOutputStream {
          writeLine(line);
          bos.reset();
       } else {
+         //TODO potential memory leak, some bound should be setup and bos write and reset
          bos.write(b);
       }
       
