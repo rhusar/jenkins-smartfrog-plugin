@@ -181,7 +181,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // terminate daemons
         killAllDaemons(sfActions);
         
-        build.setResult(terminatedNormally ? Result.SUCCESS : Result.FAILURE);
+        build.setResult(terminatedNormally ? Result.SUCCESS : Result.FAILURE); //TODO really setup result??
         return true;
     }
 
@@ -234,6 +234,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             build.addAction(a);
             a.addStateListener(this);
             sfActions[k] = a;
+            //TODO improve logging
             a.perform(build, launcher);
         }
         return sfActions;
