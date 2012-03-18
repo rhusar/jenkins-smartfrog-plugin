@@ -314,13 +314,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return true;
     }
     
-    private void killAllDaemons(SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+    private void killAllDaemons(SmartFrogAction[] sfActions) {
         for (SmartFrogAction a : sfActions) {
             a.interrupt();
         }
     }
     
-    private void failBuild(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) throws IOException, InterruptedException {
+    private void failBuild(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) {
         build.setResult(Result.FAILURE);
         killAllDaemons(sfActions);
     }

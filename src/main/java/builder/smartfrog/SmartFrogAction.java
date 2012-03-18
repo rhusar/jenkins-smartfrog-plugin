@@ -102,9 +102,17 @@ public class SmartFrogAction implements Action, Runnable {
         }
     }
 
-    public void interrupt() throws IOException, InterruptedException {
+    public void interrupt() {
         String[] cl = builder.buildStopDaemonCommandLine(host);
-        launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
+        try {
+            launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
+        } catch (IOException e) {
+            e.printStackTrace();
+            //TODO what else needs to be done?
+        } catch (InterruptedException e){
+            e.printStackTrace();
+            //TODO what else needs to be done?
+        }
         //TODO reliable kill here  - JBQA 2006
     }
 
