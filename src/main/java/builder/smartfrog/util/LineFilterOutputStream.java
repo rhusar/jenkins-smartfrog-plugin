@@ -34,6 +34,7 @@ public abstract class LineFilterOutputStream extends FilterOutputStream {
    private boolean wasCR;
    private static final byte CR = 13;
    private static final byte LF = 10;
+   private static final int MAX_STREAM_SIZE = 8192;
    
    private ByteArrayOutputStream bos = new ByteArrayOutputStream(256);
 
@@ -61,12 +62,11 @@ public abstract class LineFilterOutputStream extends FilterOutputStream {
       
       wasCR = (b == CR);
 
-      if ((b == CR) || (b == LF)) {
+      if ((b == CR) || (b == LF) || (bos.size() > MAX_STREAM_SIZE)) {
          String line = bos.toString();
          writeLine(line);
          bos.reset();
       } else {
-         //TODO potential memory leak, some bound should be setup and bos write and reset
          bos.write(b);
       }
       
