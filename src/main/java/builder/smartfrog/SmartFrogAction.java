@@ -55,7 +55,7 @@ public class SmartFrogAction implements Action, Runnable {
 
     private final String host;
     private State state;
-    private AbstractBuild<?, ?> build;  //TODO isn't it better to same build.getRoot instread?
+    private AbstractBuild<?, ?> build;
 
     private transient SmartFrogBuilder builder;
     private transient Proc proc;

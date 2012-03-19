@@ -220,7 +220,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             try {
                 ((StringScriptSource) sfScriptSource).createDefaultScriptFile(build);
             } catch (IOException ioe) {
-                listener.getLogger().println("[SmartFrog] FAILURE: Could not get canonical path to workspace:" + ioe);
+                listener.getLogger().println("[SmartFrog] ERROR: Could not get canonical path to workspace:" + ioe);
                 ioe.printStackTrace();
                 build.setResult(Result.FAILURE);
                 return false;
@@ -230,7 +230,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             File f = new File(((FileScriptSource) sfScriptSource).getScriptPath());
             if (!f.exists()) {
                 listener.getLogger().println(
-                        "[SmartFrog] FAILURE: Script file " + f.getAbsolutePath() + " doesn't exists!");
+                        "[SmartFrog] ERROR: Script file " + f.getAbsolutePath() + " doesn't exists!");
                 build.setResult(Result.FAILURE);
                 return false;
             }
@@ -279,7 +279,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             allStarted = true;
             for (SmartFrogAction a : sfActions) {
                 if (a.getState() == SmartFrogAction.State.FAILED) {
-                    listener.getLogger().println("SmartFrog deamon on host " + a.getHost() + " failed.");
+                    listener.getLogger().println("[SmartFrog] ERROR: SmartFrog deamon on host " + a.getHost() + " failed.");
                     return false;
                 }
                 if (a.getState() != SmartFrogAction.State.RUNNING) {
@@ -294,7 +294,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             try {
                 wait();
             } catch (InterruptedException ioe) {
-                listener.getLogger().println("Interrupted - failed.");
+                listener.getLogger().println("[SmartFrog] ERROR: Interrupted.");
                 return false;
             }
         } while (allStarted == false);
@@ -306,7 +306,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         try {
             int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
-                listener.getLogger().println("Deployment of support component failed.");
+                listener.getLogger().println("[SmartFrog] ERROR: Deployment of support component failed.");
                 return false;
             }
         } catch (IOException ioe) {
@@ -323,7 +323,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         try {
             int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
             if (status != 0) {
-                listener.getLogger().println("Deployment failed.");
+                listener.getLogger().println("[SmartFrog] ERROR: Deployment failed.");
                 return false;
             }
         } catch (IOException ioe) {
