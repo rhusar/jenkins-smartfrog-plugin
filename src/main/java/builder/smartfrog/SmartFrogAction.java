@@ -63,7 +63,7 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
     private transient BuildListener log;
-
+    
     public SmartFrogAction(SmartFrogBuilder builder, String host) {
         this.builder = builder;
         this.host = host;
@@ -88,7 +88,7 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public void run() {
-        // wait for proccess to finish
+        // wait for process to finish
         try {
             proc.join();
             setState(State.FINISHED);
