@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-	<f:radioBlock name="scriptSource" value="${instance}" title="Get description from file" checked="${instance.class==descriptor.clazz}">
+	<f:radioBlock name="sfScriptSource" value="${instance}" title="Get description from file" checked="${instance.class==descriptor.clazz}">
 		<f:entry title="Deployment name" field="scriptName"
 			description="The name of the component to be deployed. The name of the component has to be unique in the running SF environment.">
 			<f:textbox />

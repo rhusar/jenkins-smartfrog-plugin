@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
@@ -45,6 +46,10 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import builder.smartfrog.SmartFrogAction.State;
 import builder.smartfrog.util.Functions;
+
+//import builder.smartfrog.SmartFrogAction.State;
+//import builder.smartfrog.util.Functions;
+
 
 /**
  * SmartFrog Hudson/Jenkins plugin main.
@@ -59,9 +64,10 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     public static final String ENV_SF_USER_HOME = "SFUSERHOME";
     public static final long HEARTBEAT_PERIOD = 10000;
 
-    private SmartFrogInstance sfInstance;
+    private String smartFrogName;
     private String deployHost;
     private String hosts;
+    // SF is able to accept only 4 additional variables (class paths)
     private String sfUserHome;
     private String sfUserHome2;
     private String sfUserHome3;
@@ -69,18 +75,26 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     private String sfOpts;
     private String sfIni;
     private boolean useAltIni;
-    private ScriptSource scriptSource;
+    private ScriptSource sfScriptSource;
 
     // private transient BuildListener listener;
+    private transient SmartFrogInstance sfInstance;
     private transient String exportMatrixAxes = "";
     private transient boolean componentTerminated = false;
     private transient boolean terminatedNormally;
 
+    //backward compatibility variables
+    private transient String scriptName;
+    private transient String scriptPath;
+    private transient String scriptSource;
+    private transient String scriptContent;
+
+    
     @DataBoundConstructor
     public SmartFrogBuilder(String smartFrogName, String deployHost, String hosts, String sfUserHome,
             String sfUserHome2, String sfUserHome3, String sfUserHome4, String sfOpts, boolean useAltIni, String sfIni,
-            ScriptSource scriptSource) {
-        this.sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
+            ScriptSource sfScriptSource) {
+        this.smartFrogName = smartFrogName;
         this.deployHost = deployHost;
         this.hosts = hosts;
         this.sfUserHome = sfUserHome;
@@ -90,15 +104,26 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         this.sfOpts = sfOpts;
         this.useAltIni = useAltIni;
         this.sfIni = sfIni;
-        this.scriptSource = scriptSource;
+        this.sfScriptSource = sfScriptSource;
+        this.sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
     }
 
-    public SmartFrogInstance getSfInstance() {
-        return sfInstance;
+    protected Object readResolve(){
+        sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
+        if(sfInstance == null)
+            LOGGER.info("Smart Frog instance namned " + smartFrogName + " doesn't exists, job needs to be reconfigured!");
+        //backward compatibility
+        if(scriptSource != null){
+            if(scriptSource.equals("path"))
+                sfScriptSource = new FileScriptSource(scriptName,scriptPath);
+            if(scriptSource.equals("content"))
+                sfScriptSource = new StringScriptSource(scriptName,scriptContent);
+        }
+        return this;
     }
-
+    
     public String getSmartFrogName() {
-        return sfInstance.getName();
+        return smartFrogName;
     }
 
     public String getDeployHost() {
@@ -138,15 +163,20 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return useAltIni;
     }
 
-    public ScriptSource getScriptSource() {
-        return scriptSource;
+    public ScriptSource getSfScriptSource() {
+        return sfScriptSource;
     }
 
+    public SmartFrogInstance getSfInstance() {
+        return sfInstance;
+    }
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
         throws IOException, InterruptedException  {
         componentTerminated = false;
-
+        //reload SF Instance in case global config has changed
+        sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
         // check if SF script exists or create new one
         if (!prepareScript(build, listener))
             return false;
@@ -186,9 +216,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private boolean prepareScript(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException {
-        if (scriptSource instanceof StringScriptSource) {
+        if (sfScriptSource instanceof StringScriptSource) {
             try {
-                ((StringScriptSource) scriptSource).createDefaultScriptFile(build);
+                ((StringScriptSource) sfScriptSource).createDefaultScriptFile(build);
             } catch (IOException ioe) {
                 listener.getLogger().println("[SmartFrog] FAILURE: Could not get canonical path to workspace:" + ioe);
                 ioe.printStackTrace();
@@ -196,8 +226,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                 return false;
             }
         }
-        if (scriptSource instanceof FileScriptSource) {
-            File f = new File(((FileScriptSource) scriptSource).getScriptPath());
+        if (sfScriptSource instanceof FileScriptSource) {
+            File f = new File(((FileScriptSource) sfScriptSource).getScriptPath());
             if (!f.exists()) {
                 listener.getLogger().println(
                         "[SmartFrog] FAILURE: Script file " + f.getAbsolutePath() + " doesn't exists!");
@@ -288,7 +318,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        String[] deployCl = buildDeployCommandLine(deployHost, scriptSource.getScriptName(),
+        String[] deployCl = buildDeployCommandLine(deployHost, sfScriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
             int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
@@ -339,7 +369,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     protected String[] buildDeployCommandLine(String host, String componentName, String workspace) {
-        String defaultScriptPath = scriptSource != null ? scriptSource.getDefaultScriptPath() : "";
+        String defaultScriptPath = sfScriptSource != null ? sfScriptSource.getDefaultScriptPath() : "";
         return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host, sfInstance.getPath(),
                 sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, defaultScriptPath,
                 componentName, workspace, exportMatrixAxes };
@@ -407,4 +437,5 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
     }
 
+    private static final Logger LOGGER = Logger.getLogger(SmartFrogBuilder.class.getName());
 }

@@ -49,7 +49,7 @@
 
 <f:section title="Deployment configuration">
 	<j:invokeStatic var="descriptors" className="builder.smartfrog.ScriptSource" method="all" />
-	<j:set var="instance" value="${instance.scriptSource}" />
+	<j:set var="instance" value="${instance.sfScriptSource}" />
 	<j:forEach var="descriptor" items="${descriptors}">
 		<st:include page="${descriptor.configPage}" from="${descriptor}"/>
 	</j:forEach>
