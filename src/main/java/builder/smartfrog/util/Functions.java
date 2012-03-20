@@ -27,8 +27,8 @@ public class Functions {
     public static String cmdArrayToString(String[] cmds){
         String cmd = "";
         for(String c : cmds){
-            cmd += c;
+            cmd += c + " ";
         }
-        return cmd;
+        return cmd.substring(0, cmd.length()-1);
     }
 }
