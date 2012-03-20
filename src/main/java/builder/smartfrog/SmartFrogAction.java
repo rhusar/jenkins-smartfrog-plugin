@@ -62,8 +62,9 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Thread execThread;
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
+    private transient BuildListener listener;
     private transient BuildListener log;
-    
+
     public SmartFrogAction(SmartFrogBuilder builder, String host) {
         this.builder = builder;
         this.host = host;
@@ -74,12 +75,15 @@ public class SmartFrogAction implements Action, Runnable {
         return host;
     }
 
-    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher) throws IOException,
+    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener) throws IOException,
             InterruptedException {
         this.build = build;
         this.launcher = launcher;
+        this.listener = listener;
 
         String[] cl = builder.buildDaemonCommandLine(host, Functions.convertWsToCanonicalPath(build.getWorkspace()));
+        logUpstream("[SmartFrog] INFO: Starting daemon on host " + host);
+        logUpstream("[SmartFrog] INFO: Start command is " + Functions.cmdArrayToString(cl));
         log = new StreamBuildListener(new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile()))),
                 Charset.defaultCharset());
         proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).start();
@@ -91,6 +95,7 @@ public class SmartFrogAction implements Action, Runnable {
         // wait for process to finish
         try {
             proc.join();
+            logUpstream("[SmartFrog] INFO: Daemon on host " + host + " finished");
             setState(State.FINISHED);
         } catch (IOException ex) {
             setState(State.FAILED);
@@ -104,16 +109,15 @@ public class SmartFrogAction implements Action, Runnable {
 
     public void interrupt() {
         String[] cl = builder.buildStopDaemonCommandLine(host);
+        logUpstream("[SmartFrog] INFO: Trying to interrupt daemon on host " + host);
+        logUpstream("[SmartFrog] INFO: Interrupt command is " + Functions.cmdArrayToString(cl));
         try {
             launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
         } catch (IOException e) {
             e.printStackTrace();
-            //TODO what else needs to be done?
         } catch (InterruptedException e){
             e.printStackTrace();
-            //TODO what else needs to be done?
         }
-        //TODO reliable kill here  - JBQA 2006
     }
 
     public State getState() {
@@ -124,8 +128,9 @@ public class SmartFrogAction implements Action, Runnable {
         if (this.getState() == s)
             return;
         this.state = s;
+        logUpstream("[SmartFrog] INFO: Deamon on host " + host + " has changed state to " + state.toString());
         for (SmartFrogActionListener l : listeners)
-            l.stateChanged(this, getState());
+            l.stateChanged();
     }
 
     public void addStateListener(SmartFrogActionListener l) {
@@ -138,6 +143,12 @@ public class SmartFrogAction implements Action, Runnable {
 
     public File getLogFile() {
         return new File(build.getRootDir(), host + ".log");
+    }
+    
+    private void logUpstream(String message){
+        synchronized (listener) {
+            listener.getLogger().println(message);
+        }
     }
     
     public boolean isBuilding() {

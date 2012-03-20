@@ -5,6 +5,11 @@ import hudson.FilePath;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * 
+ * @author vjuranek
+ *
+ */
 public class Functions {
 
     public static String convertWsToCanonicalPath(FilePath workspace){
@@ -19,4 +24,11 @@ public class Functions {
         return workspacePath;
     }
     
+    public static String cmdArrayToString(String[] cmds){
+        String cmd = "";
+        for(String c : cmds){
+            cmd += c;
+        }
+        return cmd;
+    }
 }

@@ -21,7 +21,6 @@
  */
 package builder.smartfrog;
 
-import hudson.model.BuildListener;
 
 /**
  *
@@ -29,5 +28,6 @@ import hudson.model.BuildListener;
  */
 public interface SmartFrogActionListener {
 
+    public void stateChanged();
     public void stateChanged(SmartFrogAction action, SmartFrogAction.State newState);
 }
