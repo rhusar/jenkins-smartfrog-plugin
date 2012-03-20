@@ -45,6 +45,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import builder.smartfrog.SmartFrogAction.State;
+import builder.smartfrog.util.ConsoleLogger;
 import builder.smartfrog.util.Functions;
 
 //import builder.smartfrog.SmartFrogAction.State;
@@ -79,6 +80,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
     // private transient BuildListener listener;
     private transient SmartFrogInstance sfInstance;
+    private transient ConsoleLogger console;
     private transient String exportMatrixAxes;
     private transient boolean componentTerminated;
     private transient boolean terminatedNormally;
@@ -177,10 +179,11 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // transient fields need to be initialize
         exportMatrixAxes = "";
         componentTerminated = false;
+        console = new ConsoleLogger(listener);
         //reload SF Instance in case global config has changed
         sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
         // check if SF script exists or create new one
-        if (!prepareScript(build, listener))
+        if (!prepareScript(build))
             return false;
 
         // Export Matrix parameters if matrix project block
@@ -188,19 +191,19 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             exportMatrixAxes = exportMatrixAxes(build);
 
         // create daemons and run them
-        SmartFrogAction[] sfActions = createDaemons(build, launcher, listener);
+        SmartFrogAction[] sfActions = createDaemons(build, launcher);
         // wait until all daemons are ready
-        if(!daemonsReady(listener, sfActions)){
+        if(!daemonsReady(sfActions)){
             failBuild(build, sfActions);
             return false;
         }
         // deploy terminate hook
-        if(!deployTerminateHook(build, launcher, listener)){
+        if(!deployTerminateHook(build, launcher)){
             failBuild(build, sfActions);
             return false;
         }
         // deploy script
-        if(!deployScript(build, launcher, listener)){
+        if(!deployScript(build, launcher)){
             failBuild(build, sfActions);
             return false;
         }
@@ -217,12 +220,12 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return true;
     }
 
-    private boolean prepareScript(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException {
+    private boolean prepareScript(AbstractBuild<?, ?> build) throws InterruptedException {
         if (sfScriptSource instanceof StringScriptSource) {
             try {
                 ((StringScriptSource) sfScriptSource).createDefaultScriptFile(build);
             } catch (IOException ioe) {
-                log(listener,"[SmartFrog] ERROR: Could not get canonical path to workspace:" + ioe);
+                log("[SmartFrog] ERROR: Could not get canonical path to workspace:" + ioe);
                 ioe.printStackTrace();
                 build.setResult(Result.FAILURE);
                 return false;
@@ -231,7 +234,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         if (sfScriptSource instanceof FileScriptSource) {
             File f = new File(((FileScriptSource) sfScriptSource).getScriptPath());
             if (!f.exists()) {
-                log(listener,"[SmartFrog] ERROR: Script file " + f.getAbsolutePath() + " doesn't exists!");
+                log("[SmartFrog] ERROR: Script file " + f.getAbsolutePath() + " doesn't exists!");
                 build.setResult(Result.FAILURE);
                 return false;
             }
@@ -255,7 +258,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     /**
      * Create daemons and run them 
      */
-    private SmartFrogAction[] createDaemons(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    private SmartFrogAction[] createDaemons(AbstractBuild<?, ?> build, Launcher launcher) throws IOException, InterruptedException {
         String[] hostList = hosts.split("[ \t]+");
         SmartFrogAction[] sfActions = new SmartFrogAction[hostList.length];
         // start daemons
@@ -266,7 +269,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             a.addStateListener(this);
             sfActions[k] = a;
             //TODO improve logging
-            a.perform(build, launcher, listener);
+            a.perform(build, launcher, console);
         }
         return sfActions;
     }
@@ -274,13 +277,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     /**
      * Waits for all daemons to be ready, if one of them fails, fail whole build
      */
-    private synchronized boolean daemonsReady(BuildListener listener, SmartFrogAction[] sfActions) {
+    private synchronized boolean daemonsReady(SmartFrogAction[] sfActions) {
         boolean allStarted = false;
         do {
             allStarted = true;
             for (SmartFrogAction a : sfActions) {
                 if (a.getState() == SmartFrogAction.State.FAILED) {
-                    log(listener,"[SmartFrog] ERROR: SmartFrog deamon on host " + a.getHost() + " failed.");
+                    log("[SmartFrog] ERROR: SmartFrog deamon on host " + a.getHost() + " failed.");
                     return false;
                 }
                 if (a.getState() == SmartFrogAction.State.STARTING) {
@@ -295,20 +298,20 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             try {
                 wait();
             } catch (InterruptedException ioe) {
-                log(listener,"[SmartFrog] ERROR: Interrupted.");
+                log("[SmartFrog] ERROR: Interrupted.");
                 return false;
             }
         } while (allStarted == false);
-        log(listener,"[SmartFrog] INFO: All Smart Frog daemons are running ...");
+        log("[SmartFrog] INFO: All Smart Frog daemons are running ...");
         return true;
     }
     
-    private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher) {
         String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook");
         try {
-            int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
+            int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(console.getListener())).stdout(console.getListener()).pwd(build.getWorkspace()).join();
             if (status != 0) {
-                log(listener,"[SmartFrog] ERROR: Deployment of support component failed.");
+                log("[SmartFrog] ERROR: Deployment of support component failed.");
                 return false;
             }
         } catch (IOException ioe) {
@@ -316,17 +319,17 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         } catch (InterruptedException e){
             return false;
         }
-        log(listener,"[SmartFrog] INFO: Support component deployed ...");
+        log("[SmartFrog] INFO: Support component deployed ...");
         return true;
     }
 
-    private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher) {
         String[] deployCl = buildDeployCommandLine(deployHost, sfScriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
-            int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(listener)).stdout(listener).pwd(build.getWorkspace()).join();
+            int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(console.getListener())).stdout(console.getListener()).pwd(build.getWorkspace()).join();
             if (status != 0) {
-                log(listener,"[SmartFrog] ERROR: Deployment failed.");
+                log("[SmartFrog] ERROR: Deployment failed.");
                 return false;
             }
         } catch (IOException ioe) {
@@ -334,7 +337,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         } catch (InterruptedException e){
             return false;
         }
-        log(listener,"[SmartFrog] INFO: SF script deployed ...");
+        log("[SmartFrog] INFO: SF script deployed ...");
         return true;
     }
     
@@ -394,10 +397,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         notifyAll();
     }
 
-    private void log(BuildListener listener, String message){
-        synchronized (listener) {
-            listener.getLogger().println(message);
-        }
+    private void log(String message){
+        console.logAnnot(message);
     }
     
     @Override

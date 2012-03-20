@@ -43,6 +43,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.framework.io.LargeText;
 
+import builder.smartfrog.util.ConsoleLogger;
 import builder.smartfrog.util.Functions;
 import builder.smartfrog.util.LineFilterOutputStream;
 
@@ -64,7 +65,7 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Thread execThread;
     private transient Vector<SmartFrogActionListener> listeners = new Vector<SmartFrogActionListener>();
     private transient Launcher launcher;
-    private transient BuildListener listener;
+    private transient ConsoleLogger console;
     private transient BuildListener log;
 
     public SmartFrogAction(SmartFrogBuilder builder, String host) {
@@ -77,11 +78,11 @@ public class SmartFrogAction implements Action, Runnable {
         return host;
     }
 
-    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener) throws IOException,
+    public void perform(final AbstractBuild<?, ?> build, final Launcher launcher, final ConsoleLogger console) throws IOException,
             InterruptedException {
         this.build = build;
         this.launcher = launcher;
-        this.listener = listener;
+        this.console = console;
 
         String[] cl = builder.buildDaemonCommandLine(host, Functions.convertWsToCanonicalPath(build.getWorkspace()));
         logUpstream("[SmartFrog] INFO: Starting daemon on host " + host);
@@ -122,7 +123,7 @@ public class SmartFrogAction implements Action, Runnable {
         logUpstream("[SmartFrog] INFO: Trying to interrupt daemon on host " + host);
         logUpstream("[SmartFrog] INFO: Interrupt command is " + Functions.cmdArrayToString(cl));
         try {
-            //TODO possible concurrent writing into log!! (however synchronization could lead to livelock)
+            //TODO possible concurrent writing into log (from interrupt() as well as from run())!! (however synchronization could lead to livelock)
             launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).join();
         } catch (IOException e) {
             e.printStackTrace();
@@ -157,9 +158,7 @@ public class SmartFrogAction implements Action, Runnable {
     }
     
     private void logUpstream(String message){
-        synchronized (listener) {
-            listener.getLogger().println(message);
-        }
+        console.logAnnot(message);
     }
     
     public boolean isBuilding() {
