@@ -156,7 +156,7 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public String getIconFileName() {
-        return "/plugin/org.jboss.hudson.smartfrog/icons/smartfrog24.png";
+        return "/plugin/smartfrog-plugin/icons/smartfrog24.png";
     }
 
     public String getDisplayName() {
