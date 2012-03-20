@@ -30,10 +30,12 @@ import hudson.model.AbstractBuild;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Vector;
 
@@ -167,6 +169,17 @@ public class SmartFrogAction implements Action, Runnable {
         return "console-" + host;
     }
 
+    // required by index.jelly
+    public AbstractBuild<?,?> getOwnerBuild(){
+        return build;
+    }
+    
+    // required by consoleText.jelly
+    public Reader getLogReader() throws IOException {
+        File logFile = getLogFile();
+        return new FileReader(logFile);
+    }
+    
     private class SFFilterOutputStream extends LineFilterOutputStream {
 
         private OutputStreamWriter os;
