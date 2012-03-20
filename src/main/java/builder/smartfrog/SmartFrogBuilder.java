@@ -79,8 +79,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
 
     // private transient BuildListener listener;
     private transient SmartFrogInstance sfInstance;
-    private transient String exportMatrixAxes = "";
-    private transient boolean componentTerminated = false;
+    private transient String exportMatrixAxes;
+    private transient boolean componentTerminated;
     private transient boolean terminatedNormally;
 
     //backward compatibility variables
@@ -174,6 +174,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
         throws IOException, InterruptedException  {
+        // transient fields need to be initialize
+        exportMatrixAxes = "";
         componentTerminated = false;
         //reload SF Instance in case global config has changed
         sfInstance = getDescriptor().getSFInstanceByName(smartFrogName);
@@ -281,9 +283,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                     log(listener,"[SmartFrog] ERROR: SmartFrog deamon on host " + a.getHost() + " failed.");
                     return false;
                 }
-                if (a.getState() != SmartFrogAction.State.RUNNING) {
+                if (a.getState() == SmartFrogAction.State.STARTING) {
                     allStarted = false;
-                    break; //TODO really break? If something fails maybe better to check all action for failures first
+                    break; 
                 }
             }
             
@@ -297,6 +299,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                 return false;
             }
         } while (allStarted == false);
+        log(listener,"[SmartFrog] INFO: All Smart Frog daemons are running ...");
         return true;
     }
     
@@ -313,6 +316,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         } catch (InterruptedException e){
             return false;
         }
+        log(listener,"[SmartFrog] INFO: Support component deployed ...");
         return true;
     }
 
@@ -330,6 +334,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         } catch (InterruptedException e){
             return false;
         }
+        log(listener,"[SmartFrog] INFO: SF script deployed ...");
         return true;
     }
     
@@ -346,6 +351,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     
     private void killAllDaemons(SmartFrogAction[] sfActions) {
         for (SmartFrogAction a : sfActions) {
+            //if(a.getState() == SmartFrogAction.State.FAILED || a.getState() == SmartFrogAction.State.FAILED)
             a.interrupt();
         }
     }

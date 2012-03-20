@@ -88,25 +88,33 @@ public class SmartFrogAction implements Action, Runnable {
         logUpstream("[SmartFrog] INFO: Start command is " + Functions.cmdArrayToString(cl));
         log = new StreamBuildListener(new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile()))),
                 Charset.defaultCharset());
-        proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).start();
+        proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).start();
         execThread = new Thread(this, "SFDaemon - " + host);
         execThread.start();
     }
 
     public void run() {
         // wait for process to finish
+        int status = 1; //by default fail
         try {
-            proc.join();
-            logUpstream("[SmartFrog] INFO: Daemon on host " + host + " finished");
-            setState(State.FINISHED);
+            status = proc.join();
         } catch (IOException ex) {
+            status = 1;
             setState(State.FAILED);
         } catch (InterruptedException ex) {
+            status = 1;
             setState(State.FAILED);
         } finally {
             //TODO reliable kill here  - JBQA 2006
             log.getLogger().close();
         }
+        if(status != 0){
+            logUpstream("[SmartFrog] INFO: Daemon on host " + host + " failed");
+            setState(State.FAILED);
+            return;
+        }
+        logUpstream("[SmartFrog] INFO: Daemon on host " + host + " finished");
+        setState(State.FINISHED);
     }
 
     public void interrupt() {
@@ -114,7 +122,8 @@ public class SmartFrogAction implements Action, Runnable {
         logUpstream("[SmartFrog] INFO: Trying to interrupt daemon on host " + host);
         logUpstream("[SmartFrog] INFO: Interrupt command is " + Functions.cmdArrayToString(cl));
         try {
-            launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).join();
+            //TODO possible concurrent writing into log!! (however synchronization could lead to livelock)
+            launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).join();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e){
