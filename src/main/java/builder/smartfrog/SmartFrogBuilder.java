@@ -366,19 +366,19 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     
     protected String[] buildDaemonCommandLine(String host, String workspace) {
         String iniPath = useAltIni ? sfIni : sfInstance.getPath() + "/bin/default.ini";
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/runSF.sh", host, sfInstance.getPath(),
+        return new String[] { "bash", "-xe", sfInstance.getSupport() + "/runSF.sh", host, sfInstance.getPath(),
                 sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, workspace, getSfOpts(),
                 iniPath, exportMatrixAxes };
     }
 
     protected String[] buildStopDaemonCommandLine(String host) {
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/stopSF.sh", host, sfInstance.getPath(),
+        return new String[] { "bash", "-xe", sfInstance.getSupport() + "/stopSF.sh", host, sfInstance.getPath(),
                 sfUserHome };
     }
 
     protected String[] buildDeployCommandLine(String host, String componentName, String workspace) {
         String defaultScriptPath = sfScriptSource != null ? sfScriptSource.getDefaultScriptPath() : "";
-        return new String[] { "/bin/bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host, sfInstance.getPath(),
+        return new String[] { "bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host, sfInstance.getPath(),
                 sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, defaultScriptPath,
                 componentName, workspace, exportMatrixAxes };
     }

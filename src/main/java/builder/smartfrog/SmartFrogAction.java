@@ -37,7 +37,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.Map;
 import java.util.Vector;
 
 import org.kohsuke.stapler.StaplerRequest;
@@ -91,8 +90,6 @@ public class SmartFrogAction implements Action, Runnable {
         log = new StreamBuildListener(new PrintStream(new SFFilterOutputStream(new FileOutputStream(getLogFile()))),
                 Charset.defaultCharset());
         proc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).start();
-        //Map<String,String> env = build.getEnvVars();
-        //proc = launcher.launch(cl, env, log.getLogger(), build.getParent().getWorkspace());
         execThread = new Thread(this, "SFDaemon - " + host);
         execThread.start();
     }
