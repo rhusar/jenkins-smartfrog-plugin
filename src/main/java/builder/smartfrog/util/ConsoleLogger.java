@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 
+/**
+ * 
+ * @author vjuranek
+ *
+ */
 public class ConsoleLogger {
     
     private final BuildListener listener;

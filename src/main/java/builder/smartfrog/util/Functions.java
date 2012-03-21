@@ -25,10 +25,10 @@ public class Functions {
     }
     
     public static String cmdArrayToString(String[] cmds){
-        String cmd = "";
-        for(String c : cmds){
-            cmd += c + " ";
+        StringBuilder buf = new StringBuilder();
+        for (String c : cmds) {
+            buf.append(c).append(" ");
         }
-        return cmd.substring(0, cmd.length()-1);
+        return buf.substring(0, buf.length()-1);
     }
 }

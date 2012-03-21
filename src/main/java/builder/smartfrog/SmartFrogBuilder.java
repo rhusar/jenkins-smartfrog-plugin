@@ -398,7 +398,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private void log(String message){
-        console.logAnnot(message);
+        //console.logAnnot(message);
+        console.log(message);
     }
     
     @Override
