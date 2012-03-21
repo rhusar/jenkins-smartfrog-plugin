@@ -243,6 +243,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private String exportMatrixAxes(AbstractBuild<?, ?> build) {
+        //TODO String builder
         String exportedMatrixAxes = " ";
         MatrixConfiguration matrix = (MatrixConfiguration) build.getProject();
         Combination combinations = matrix.getCombination();
@@ -307,7 +308,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
     
     private boolean deployTerminateHook(AbstractBuild<?, ?> build, Launcher launcher) {
-        String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook");
+        String[] deploySLCl = buildDeployCommandLine(deployHost, sfInstance.getSupportScriptPath(), "terminate-hook", Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
             int status = launcher.launch().cmds(deploySLCl).envs(build.getEnvironment(console.getListener())).stdout(console.getListener()).pwd(build.getWorkspace()).join();
             if (status != 0) {
@@ -324,7 +325,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private boolean deployScript(AbstractBuild<?, ?> build, Launcher launcher) {
-        String[] deployCl = buildDeployCommandLine(deployHost, sfScriptSource.getScriptName(),
+        String defaultScriptPath = sfScriptSource != null ? sfScriptSource.getDefaultScriptPath() : "";
+        String[] deployCl = buildDeployCommandLine(deployHost, defaultScriptPath, sfScriptSource.getScriptName(),
                 Functions.convertWsToCanonicalPath(build.getWorkspace()));
         try {
             int status = launcher.launch().cmds(deployCl).envs(build.getEnvironment(console.getListener())).stdout(console.getListener()).pwd(build.getWorkspace()).join();
@@ -376,10 +378,9 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                 sfUserHome };
     }
 
-    protected String[] buildDeployCommandLine(String host, String componentName, String workspace) {
-        String defaultScriptPath = sfScriptSource != null ? sfScriptSource.getDefaultScriptPath() : "";
+    protected String[] buildDeployCommandLine(String host, String scriptPath, String componentName, String workspace) {
         return new String[] { "bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host, sfInstance.getPath(),
-                sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, defaultScriptPath,
+                sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, scriptPath, //sfInstance.getSupportScriptPath(),
                 componentName, workspace, exportMatrixAxes };
     }
 
