@@ -207,7 +207,7 @@ public class SmartFrogAction implements Action, Runnable {
             if (idx > -1) {
                 String compName = line.substring(line.indexOf('[', idx + 15) + 1);
                 compName = compName.substring(0, compName.indexOf(']'));
-                if (compName.endsWith(builder.getSfInstance().getName())) {
+                if (compName.endsWith(builder.getSfScriptSource().getScriptName())) {
                     //TODO keep this info locally?
                     builder.componentTerminated(!line.contains("ABNORMAL"));
                 }

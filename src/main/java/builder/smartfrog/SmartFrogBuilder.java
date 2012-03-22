@@ -208,7 +208,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             return false;
         }
         // wait for component termination
-        if(!waitForCompletion(build)){
+        if(!waitForCompletion()){
             build.setResult(Result.ABORTED);
             killAllDaemons(sfActions);
             return false;
@@ -343,7 +343,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return true;
     }
     
-    private synchronized boolean waitForCompletion(AbstractBuild<?, ?> build) {
+    private synchronized boolean waitForCompletion() {
         while (!componentTerminated) {
             try {
                 wait();
@@ -351,6 +351,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                 return false;
             }
         }
+        log("[SmartFrog] INFO: Component terminated");
         return true;
     }
     
@@ -393,8 +394,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     public synchronized void componentTerminated(boolean normal) {
-        this.componentTerminated = true;
-        this.terminatedNormally = normal;
+        componentTerminated = true;
+        terminatedNormally = normal;
         notifyAll();
     }
 
