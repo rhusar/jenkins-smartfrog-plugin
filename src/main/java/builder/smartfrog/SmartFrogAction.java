@@ -158,8 +158,8 @@ public class SmartFrogAction implements Action, Runnable {
     }
     
     private void logUpstream(String message){
-        //console.logAnnot(message);
-        console.log(message);
+        console.logAnnot(message);
+        //console.log(message);
     }
     
     public boolean isBuilding() {

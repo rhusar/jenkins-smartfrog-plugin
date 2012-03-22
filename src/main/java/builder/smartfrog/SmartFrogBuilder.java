@@ -86,9 +86,13 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     private transient boolean terminatedNormally;
 
     //backward compatibility variables
+    @Deprecated
     private transient String scriptName;
+    @Deprecated
     private transient String scriptPath;
+    @Deprecated
     private transient String scriptSource;
+    @Deprecated
     private transient String scriptContent;
 
     
@@ -400,8 +404,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private void log(String message){
-        //console.logAnnot(message);
-        console.log(message);
+        console.logAnnot(message);
+        //console.log(message);
     }
     
     @Override
