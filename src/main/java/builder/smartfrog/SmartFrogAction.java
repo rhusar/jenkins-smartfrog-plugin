@@ -67,15 +67,21 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Launcher launcher;
     private transient ConsoleLogger console;
     private transient BuildListener log;
+    private final transient int logNum;
 
-    public SmartFrogAction(SmartFrogBuilder builder, String host) {
+    public SmartFrogAction(SmartFrogBuilder builder, String host, int logNum) {
         this.builder = builder;
         this.host = host;
         this.state = State.STARTING;
+        this.logNum = logNum;
     }
 
     public String getHost() {
         return host;
+    }
+    
+    public int getLogNum(){
+        return logNum;
     }
 
     public void perform(final AbstractBuild<?, ?> build, final Launcher launcher, final ConsoleLogger console) throws IOException,
@@ -154,7 +160,7 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public File getLogFile() {
-        return new File(build.getRootDir(), host + ".log");
+        return new File(build.getRootDir(), host + "_" + logNum + ".log");
     }
     
     private void logUpstream(String message){
@@ -171,11 +177,11 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public String getDisplayName() {
-        return "sfDaemon - " + host;
+        return "sfDaemon - " + host + " #" + logNum;
     }
 
     public String getUrlName() {
-        return "console-" + host;
+        return "console-" + host + "-" + logNum;
     }
 
     // required by index.jelly
