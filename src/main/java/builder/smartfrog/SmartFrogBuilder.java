@@ -22,6 +22,7 @@
 package builder.smartfrog;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.Combination;
 import hudson.matrix.MatrixConfiguration;
@@ -32,11 +33,11 @@ import hudson.model.Descriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
@@ -189,7 +190,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // check if SF script exists or create new one
         if (!prepareScript(build))
             return false;
-
+        
         // Export Matrix parameters if matrix project block
         if (build.getProject() instanceof MatrixConfiguration)
             exportMatrixAxes = exportMatrixAxes(build);
@@ -236,9 +237,16 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             }
         }
         if (sfScriptSource instanceof FileScriptSource) {
-            File f = new File(((FileScriptSource) sfScriptSource).getScriptPath());
-            if (!f.exists()) {
-                log("[SmartFrog] ERROR: Script file " + f.getAbsolutePath() + " doesn't exists!");
+            FilePath fp = new FilePath(build.getWorkspace(), ((FileScriptSource) sfScriptSource).getScriptPath());
+            try {
+                if ( !fp.exists()) {
+                    log("[SmartFrog] ERROR: Script file " + fp.getName() + " doesn't exists on channel" + fp.getChannel() + "!");
+                    build.setResult(Result.FAILURE);
+                    return false;
+                }
+            } catch (IOException e) {
+                log("[SmartFrog] ERROR: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "! IOException cought, check Jenkins log for more details");
+                LOGGER.log(Level.INFO, "SmartFrog error: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "!", e);
                 build.setResult(Result.FAILURE);
                 return false;
             }
