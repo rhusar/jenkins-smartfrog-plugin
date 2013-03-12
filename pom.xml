@@ -137,6 +137,18 @@
       </pluginRepository>
 
       <pluginRepository>
+         <id>jenkins</id>
+         <url>http://maven.jenkins-ci.org/content/repositories/releases/</url>
+         <releases>
+            <!-- only look for jars here when they are not present locally -->
+            <updatePolicy>never</updatePolicy>
+         </releases>
+         <snapshots>
+            <enabled>false</enabled>
+         </snapshots>
+      </pluginRepository>
+
+      <pluginRepository>
          <id>java.net2</id>
          <url>http://download.java.net/maven/2</url>
          <releases>
