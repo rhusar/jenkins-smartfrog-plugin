@@ -23,6 +23,7 @@ package builder.smartfrog;
 
 import hudson.Launcher;
 import hudson.Proc;
+import hudson.Util;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
@@ -181,7 +182,7 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public String getUrlName() {
-        return "console-" + host + "-" + logNum;
+        return "console-" + Util.rawEncode(host) + "-" + logNum;
     }
 
     // required by index.jelly
