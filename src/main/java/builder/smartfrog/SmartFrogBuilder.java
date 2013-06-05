@@ -49,10 +49,6 @@ import builder.smartfrog.SmartFrogAction.State;
 import builder.smartfrog.util.ConsoleLogger;
 import builder.smartfrog.util.Functions;
 
-//import builder.smartfrog.SmartFrogAction.State;
-//import builder.smartfrog.util.Functions;
-
-
 /**
  * SmartFrog Hudson/Jenkins plugin main.
  * 
