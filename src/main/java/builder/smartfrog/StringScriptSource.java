@@ -1,13 +1,12 @@
 package builder.smartfrog;
 
-import java.io.File;
-import java.io.IOException;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
-import hudson.model.ParametersAction;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -17,12 +16,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  */
 public class StringScriptSource extends ScriptSource {
-
-    private static final String DEFAULT_SCRIPT_NAME = "deployScript";
-    private static final String DEFAULTSCRIPT_SUFFIX = ".sf";
     
     private final String scriptContent;
-    private transient File defaultScriptFile;
+    private transient File tmpScriptFile;
     
     @DataBoundConstructor
     public StringScriptSource(String scriptName, String scriptContent){
@@ -34,17 +30,14 @@ public class StringScriptSource extends ScriptSource {
         return scriptContent;
     }
     
-    public void createDefaultScriptFile(AbstractBuild<?,?> build) throws InterruptedException, IOException {
-        String script = scriptContent;
-        ParametersAction pa = build.getAction(ParametersAction.class);
-        if(pa != null)
-            script = pa.substitute(build, script);
-        FilePath path = build.getWorkspace().createTextTempFile(DEFAULT_SCRIPT_NAME, DEFAULTSCRIPT_SUFFIX, script, true);
-        defaultScriptFile = new File(path.getRemote());
+    @Override
+    public void createScriptFile(AbstractBuild<?,?> build) throws InterruptedException, IOException {
+        FilePath path = createDefaultScriptFile(scriptContent, build);
+        tmpScriptFile = new File(path.getRemote());
     }
     
     public String getDefaultScriptPath(){
-        return defaultScriptFile.getPath();
+        return tmpScriptFile.getPath();
     }
     
     public DescriptorImpl getDescriptor(){

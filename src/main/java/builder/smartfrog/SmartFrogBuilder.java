@@ -222,31 +222,32 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     }
 
     private boolean prepareScript(AbstractBuild<?, ?> build) throws InterruptedException {
-        if (sfScriptSource instanceof StringScriptSource) {
-            try {
-                ((StringScriptSource) sfScriptSource).createDefaultScriptFile(build);
-            } catch (IOException ioe) {
-                log("[SmartFrog] ERROR: Could not get canonical path to workspace:" + ioe);
-                ioe.printStackTrace();
+        
+        // create temporary file with SF script 
+        try {
+            sfScriptSource.createScriptFile(build);
+        } catch (IOException ioe) {
+            log("[SmartFrog] ERROR: Could not get canonical path to workspace:" + ioe);
+            ioe.printStackTrace();
+            build.setResult(Result.FAILURE);
+            return false;
+        }
+        
+        // verify that file really exists in workspace
+        FilePath fp = new FilePath(build.getWorkspace(), sfScriptSource.getDefaultScriptPath());
+        try {
+            if ( !fp.exists()) {
+                log("[SmartFrog] ERROR: Script file " + fp.getName() + " doesn't exists on channel" + fp.getChannel() + "!");
                 build.setResult(Result.FAILURE);
                 return false;
             }
+        } catch (IOException e) {
+            log("[SmartFrog] ERROR: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "! IOException cought, check Jenkins log for more details");
+            LOGGER.log(Level.INFO, "SmartFrog error: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "!", e);
+            build.setResult(Result.FAILURE);
+            return false;
         }
-        if (sfScriptSource instanceof FileScriptSource) {
-            FilePath fp = new FilePath(build.getWorkspace(), ((FileScriptSource) sfScriptSource).getScriptPath());
-            try {
-                if ( !fp.exists()) {
-                    log("[SmartFrog] ERROR: Script file " + fp.getName() + " doesn't exists on channel" + fp.getChannel() + "!");
-                    build.setResult(Result.FAILURE);
-                    return false;
-                }
-            } catch (IOException e) {
-                log("[SmartFrog] ERROR: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "! IOException cought, check Jenkins log for more details");
-                LOGGER.log(Level.INFO, "SmartFrog error: failed to verify that " + fp.getName() + " exists on channel" + fp.getChannel() + "!", e);
-                build.setResult(Result.FAILURE);
-                return false;
-            }
-        }
+        
         return true;
     }
 

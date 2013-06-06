@@ -32,7 +32,7 @@ public class StringScriptSourceTest {
         
         String script = "My test script with string param of with value ${TestStringParam} and boolean param with value ${TestBooleanParam}";
         StringScriptSource ss = new StringScriptSource("testScript", script);
-        ss.createDefaultScriptFile(build);
+        ss.createScriptFile(build);
         BufferedReader br = new BufferedReader(new FileReader(ss.getDefaultScriptPath()));
         String actualScrtipt = br.readLine();
         br.close();
