@@ -7,6 +7,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.Hudson;
+import hudson.model.ParametersAction;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -34,7 +35,11 @@ public class StringScriptSource extends ScriptSource {
     }
     
     public void createDefaultScriptFile(AbstractBuild<?,?> build) throws InterruptedException, IOException {
-        FilePath path = build.getWorkspace().createTextTempFile(DEFAULT_SCRIPT_NAME, DEFAULTSCRIPT_SUFFIX, scriptContent, true);
+        String script = scriptContent;
+        ParametersAction pa = build.getAction(ParametersAction.class);
+        if(pa != null)
+            script = pa.substitute(build, script);
+        FilePath path = build.getWorkspace().createTextTempFile(DEFAULT_SCRIPT_NAME, DEFAULTSCRIPT_SUFFIX, script, true);
         defaultScriptFile = new File(path.getRemote());
     }
     
