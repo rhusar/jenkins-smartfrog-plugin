@@ -29,16 +29,20 @@ import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
 import hudson.model.AbstractBuild;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Vector;
+import java.util.zip.GZIPInputStream;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -159,8 +163,11 @@ public class SmartFrogAction implements Action, Runnable {
     public void doProgressiveLog(StaplerRequest req, StaplerResponse rsp) throws IOException {
         new LargeText(getLogFile(), !isBuilding()).doProgressText(req, rsp);
     }
-
+    
     public File getLogFile() {
+        File gzipLogFile = new File(build.getRootDir(), host + "_" + logNum + ".log.gz");
+        if(gzipLogFile.isFile())
+            return gzipLogFile;
         return new File(build.getRootDir(), host + "_" + logNum + ".log");
     }
     
@@ -192,8 +199,23 @@ public class SmartFrogAction implements Action, Runnable {
     
     // required by consoleText.jelly
     public Reader getLogReader() throws IOException {
+        return new InputStreamReader(getLogInputStream());
+    }
+    
+    public InputStream getLogInputStream() throws IOException {
         File logFile = getLogFile();
-        return new FileReader(logFile);
+        
+        if (logFile != null && logFile.exists() ) {
+            FileInputStream fis = new FileInputStream(logFile);
+            if (logFile.getName().endsWith(".gz")) {
+                return new GZIPInputStream(fis);
+            } else {
+                return fis;
+            }
+        }
+        
+        String message = "No such file: " + logFile;
+        return new ByteArrayInputStream(message.getBytes());
     }
     
     private class SFFilterOutputStream extends LineFilterOutputStream {
