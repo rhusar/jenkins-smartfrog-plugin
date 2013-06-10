@@ -28,6 +28,7 @@ import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.StreamBuildListener;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -44,9 +45,12 @@ import java.nio.charset.Charset;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import javax.servlet.ServletException;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.framework.io.LargeText;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import builder.smartfrog.util.ConsoleLogger;
 import builder.smartfrog.util.Functions;
@@ -73,6 +77,7 @@ public class SmartFrogAction implements Action, Runnable {
     private transient ConsoleLogger console;
     private transient BuildListener log;
     private final transient int logNum;
+    private transient String readableLogSize;
 
     public SmartFrogAction(SmartFrogBuilder builder, String host, int logNum) {
         this.builder = builder;
@@ -89,6 +94,12 @@ public class SmartFrogAction implements Action, Runnable {
         return logNum;
     }
 
+    public String getReadableLogSize() {
+        if(readableLogSize == null)
+            readableLogSize = hudson.Functions.humanReadableByteSize(getLogFile().length());
+        return readableLogSize;
+    }
+    
     public void perform(final AbstractBuild<?, ?> build, final Launcher launcher, final ConsoleLogger console) throws IOException,
             InterruptedException {
         this.build = build;
@@ -216,6 +227,18 @@ public class SmartFrogAction implements Action, Runnable {
         
         String message = "No such file: " + logFile;
         return new ByteArrayInputStream(message.getBytes());
+    }
+    
+    @RequirePOST
+    public void doDoDelete( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+        build.checkPermission(Run.DELETE);
+        File log = getLogFile();
+        if(log != null)
+            if(log.delete()) {
+                build.getActions().remove(this);
+                build.save();
+            }
+        rsp.sendRedirect2(req.getContextPath()+'/' + build.getUrl());
     }
     
     private class SFFilterOutputStream extends LineFilterOutputStream {
