@@ -43,6 +43,7 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import javax.servlet.ServletException;
@@ -146,7 +147,19 @@ public class SmartFrogAction implements Action, Runnable {
         logUpstream("[SmartFrog] INFO: Interrupt command is " + Functions.cmdArrayToString(cl));
         try {
             //TODO possible concurrent writing into log (from interrupt() as well as from run())!! (however synchronization could lead to livelock)
-            launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).join();
+            Proc killProc = launcher.launch().cmds(cl).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).start();
+            int exitCode = killProc.joinWithTimeout(5, TimeUnit.MINUTES, console.getListener());
+            if(exitCode != 0) { 
+                // something went wrong, let's try hard kill, also with timeout as whole machine can be unresponsive
+                // TODO replace with something more sophisticated/universal than bash script
+                String[] cmd = builder.buildKilleThemAllCommandLine(host);    
+                Proc killThemAll = launcher.launch().cmds(cmd).envs(build.getEnvironment(log)).pwd(build.getWorkspace()).stdout(log).start();
+                // still can take some time if e.g. server is under heavy load due to deadlock or something like this, so let wait few minutes too
+                exitCode = killProc.joinWithTimeout(3, TimeUnit.MINUTES, console.getListener());
+                if(exitCode != 0 && killThemAll.isAlive()) {
+                    logUpstream("[SmartFrog] ERROR: Hard kill timeout, giving up. Machine is probably unresponsive, plase check it manually.");
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e){

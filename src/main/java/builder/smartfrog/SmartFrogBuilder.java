@@ -403,6 +403,10 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
                 sfUserHome };
     }
 
+    protected String[] buildKilleThemAllCommandLine(String host) {
+        return new String[] { "bash", "-xe", sfInstance.getSupport() + "/killThemAll.sh", host};
+    }
+    
     protected String[] buildDeployCommandLine(String host, String scriptPath, String componentName, String workspace) {
         return new String[] { "bash", "-xe", sfInstance.getSupport() + "/deploySF.sh", host, sfInstance.getPath(),
                 sfUserHome, sfInstance.getSupport(), sfUserHome2, sfUserHome3, sfUserHome4, scriptPath, //sfInstance.getSupportScriptPath(),
