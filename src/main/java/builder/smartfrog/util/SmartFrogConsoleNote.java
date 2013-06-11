@@ -5,16 +5,17 @@ import hudson.MarkupText;
 import hudson.console.ConsoleAnnotationDescriptor;
 import hudson.console.ConsoleAnnotator;
 import hudson.console.ConsoleNote;
+import hudson.model.Run;
 
 /**
  * 
  * @author vjuranek
  *
  */
-public class SmartFrogConsoleNote  extends ConsoleNote {
-    
+public class SmartFrogConsoleNote  extends ConsoleNote<Run<?,?>> {
+
     @Override
-    public ConsoleAnnotator annotate(Object context, MarkupText text, int charPos){
+    public ConsoleAnnotator<Run<?,?>> annotate(Run<?,?> context, MarkupText text, int charPos){
         if(text.getText().contains("ERROR"))
             text.addMarkup(0,text.length(),"<span style=\"font-weight: bold; color:red\">","</span>");
         if(text.getText().contains("INFO"))
@@ -28,5 +29,7 @@ public class SmartFrogConsoleNote  extends ConsoleNote {
             return "Smart Frog errors";
         }
     }
+    
+    private static final long serialVersionUID = 1L;
 
 }
