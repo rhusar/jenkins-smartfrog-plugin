@@ -34,6 +34,10 @@
     <f:entry title="SF_OPTS" field="sfOpts" description="Arguments passed to JVM (since 3.17.014 and higher).">
     	<f:textbox />
     </f:entry>
+    
+    <f:entry title="Unique build step ID" field="builderId" description="Unique ID which identifies this build step. Usefull when you run multiple SF build steps in on jobs.">
+        <f:textbox />
+    </f:entry>
 
    <f:block>
      <table>

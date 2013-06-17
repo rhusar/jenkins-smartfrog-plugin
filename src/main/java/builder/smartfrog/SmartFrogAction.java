@@ -69,6 +69,7 @@ public class SmartFrogAction implements Action, Runnable {
     private final String host;
     private State state;
     private AbstractBuild<?, ?> build;
+    private String prefixId;
 
     private transient SmartFrogBuilder builder;
     private transient Proc proc;
@@ -77,24 +78,32 @@ public class SmartFrogAction implements Action, Runnable {
     private transient Launcher launcher;
     private transient ConsoleLogger console;
     private transient BuildListener log;
-    private final transient int logNum;
     private transient String readableLogSize;
 
-    public SmartFrogAction(SmartFrogBuilder builder, String host, int logNum) {
+    public SmartFrogAction(SmartFrogBuilder builder, String host) {
         this.builder = builder;
         this.host = host;
         this.state = State.STARTING;
-        this.logNum = logNum;
+        this.prefixId = "";
+    }
+    
+    public SmartFrogAction(SmartFrogBuilder builder, String host, String prefixId) {
+        this.builder = builder;
+        this.host = host;
+        this.state = State.STARTING;
+        this.prefixId = prefixId;
+    }
+    
+    protected Object readResolve(){
+        if(prefixId == null)
+            prefixId = "";
+        return this;
     }
 
     public String getHost() {
         return host;
     }
     
-    public int getLogNum(){
-        return logNum;
-    }
-
     public String getReadableLogSize() {
         if(readableLogSize == null)
             readableLogSize = hudson.Functions.humanReadableByteSize(getLogFile().length());
@@ -189,10 +198,14 @@ public class SmartFrogAction implements Action, Runnable {
     }
     
     public File getLogFile() {
-        File gzipLogFile = new File(build.getRootDir(), host + "_" + logNum + ".log.gz");
+        String logFileName = host;
+        if(!prefixId.isEmpty())
+            logFileName = prefixId + "_" +logFileName;
+        
+        File gzipLogFile = new File(build.getRootDir(), logFileName + ".log.gz");
         if(gzipLogFile.isFile())
             return gzipLogFile;
-        return new File(build.getRootDir(), host + "_" + logNum + ".log");
+        return new File(build.getRootDir(), logFileName + ".log");
     }
     
     private void logUpstream(String message){
@@ -209,11 +222,15 @@ public class SmartFrogAction implements Action, Runnable {
     }
 
     public String getDisplayName() {
-        return "sfDaemon - " + host + " #" + logNum;
+        if(prefixId.isEmpty())
+            return "sfDaemon - " + host;
+        return "sfDaemon - " + host + " (" + prefixId + ")" ;
     }
 
     public String getUrlName() {
-        return "console-" + Util.rawEncode(host) + "-" + logNum;
+        if(prefixId.isEmpty())
+            return "console-" + Util.rawEncode(host);
+        return prefixId + "-console-" + Util.rawEncode(host);
     }
 
     // required by index.jelly

@@ -71,6 +71,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     private String sfUserHome3;
     private String sfUserHome4;
     private String sfOpts;
+    private String builderId;
     private String sfIni;
     private boolean useAltIni;
     private ScriptSource sfScriptSource;
@@ -95,7 +96,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     
     @DataBoundConstructor
     public SmartFrogBuilder(String smartFrogName, String deployHost, String hosts, String sfUserHome,
-            String sfUserHome2, String sfUserHome3, String sfUserHome4, String sfOpts, boolean useAltIni, String sfIni,
+            String sfUserHome2, String sfUserHome3, String sfUserHome4, String sfOpts, String builderId, boolean useAltIni, String sfIni,
             ScriptSource sfScriptSource) {
         this.smartFrogName = smartFrogName;
         this.deployHost = deployHost;
@@ -105,6 +106,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         this.sfUserHome3 = sfUserHome3;
         this.sfUserHome4 = sfUserHome4;
         this.sfOpts = sfOpts;
+        this.builderId = builderId;
         this.useAltIni = useAltIni;
         this.sfIni = sfIni;
         this.sfScriptSource = sfScriptSource;
@@ -162,6 +164,10 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         return sfIni;
     }
 
+    public String getBuilderId() {
+        return builderId;
+    }
+    
     public boolean isUseAltIni() {
         return useAltIni;
     }
@@ -274,8 +280,7 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
         // start daemons
         for (int k = 0; k < hostList.length; k++) {
             String host = hostList[k];
-            int logNum = getNextActionNumber(build, host);
-            SmartFrogAction a = new SmartFrogAction(this, host, logNum);
+            SmartFrogAction a = new SmartFrogAction(this, host, builderId);
             build.addAction(a);
             a.addStateListener(this);
             sfActions[k] = a;
@@ -375,20 +380,6 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
     private void failBuild(AbstractBuild<?, ?> build, SmartFrogAction[] sfActions) {
         build.setResult(Result.FAILURE);
         killAllDaemons(sfActions);
-    }
-    
-    private int getNextActionNumber(AbstractBuild<?, ?> build, String host){
-        List<SmartFrogAction> existingActions = build.getActions(SmartFrogAction.class);
-        if(existingActions.size() == 0)
-            return 1;
-        int maxNum = 0;
-        for(SmartFrogAction a : existingActions){
-            if(a.getHost().equals(host)){
-                if(a.getLogNum() > maxNum)
-                    maxNum = a.getLogNum();
-            }
-        }
-        return ++maxNum;
     }
     
     protected String[] buildDaemonCommandLine(String host, String workspace) {
