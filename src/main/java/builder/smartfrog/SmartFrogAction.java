@@ -130,7 +130,8 @@ public class SmartFrogAction implements Action, Runnable {
         // wait for process to finish
         int status = 1; //by default fail
         try {
-            status = proc.join();
+            if(proc.isAlive())
+                status = proc.join();
         } catch (IOException ex) {
             status = 1;
             setState(State.FAILED);
