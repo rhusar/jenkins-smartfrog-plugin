@@ -1,41 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.jenkins-ci.plugins</groupId>
-		<artifactId>plugin</artifactId>
-		<version>1.480</version>
-		<!-- <relativePath>../pom.xml</relativePath> -->
-	</parent>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>1.480</version>
+        <!-- <relativePath>../pom.xml</relativePath> -->
+    </parent>
 
-	<artifactId>smartfrog-plugin</artifactId>
-	<packaging>hpi</packaging>
-	<version>2.2.2-SNAPSHOT</version>
-	<name>SmartFrog Builder</name>
+    <artifactId>smartfrog-plugin</artifactId>
+    <packaging>hpi</packaging>
+    <version>2.2.2-SNAPSHOT</version>
+    <name>SmartFrog Builder</name>
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <developers>
+        <developer>
+            <id>vjuranek</id>
+            <name>Vojtech Juranek</name>
+        </developer>
+        <developer>
+            <id>rhusar</id>
+            <name>Radoslav Husar</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/smartfrog-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/smartfrog-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/smartfrog-plugin</url>
+    </scm>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
-	<repositories>
-		<repository>
-			<id>repo.jenkins-ci.org</id>
-			<url>http://repo.jenkins-ci.org/public/</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>repo.jenkins-ci.org</id>
-			<url>http://repo.jenkins-ci.org/public/</url>
-		</pluginRepository>
-	</pluginRepositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>
