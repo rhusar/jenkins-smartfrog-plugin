@@ -124,6 +124,8 @@ public class SmartFrogBuilder extends Builder implements SmartFrogActionListener
             if(scriptSource.equals("content"))
                 sfScriptSource = new StringScriptSource(scriptName,scriptContent);
         }
+        if(builderId == null) 
+            builderId = "";
         return this;
     }
     
