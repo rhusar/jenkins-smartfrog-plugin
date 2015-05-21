@@ -13,7 +13,8 @@
     <packaging>hpi</packaging>
     <version>2.2.4-SNAPSHOT</version>
     <name>SmartFrog Builder</name>
-
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/SmartFrog+Plugin</url>
+    
     <developers>
         <developer>
             <id>vjuranek</id>
@@ -28,7 +29,7 @@
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/smartfrog-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/smartfrog-plugin.git</developerConnection>
-        <url>https://wiki.jenkins-ci.org/display/JENKINS/SmartFrog+Plugin</url>
+        <url>https://github.com/jenkinsci/smartfrog-plugin</url>
     </scm>
 
     <dependencies>
